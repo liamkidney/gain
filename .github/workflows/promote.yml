@@ -1,0 +1,28 @@
+name: Promote dev to production
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  promote:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: dev
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify ancestry and test exact dev SHA
+        run: |
+          git fetch origin main dev
+          git merge-base --is-ancestor origin/main origin/dev
+          npm run check
+          npm run build:prod
+          npm run build:dev
+      - name: Fast-forward main
+        run: |
+          SHA=$(git rev-parse HEAD)
+          test "$SHA" = "$(git rev-parse origin/dev)"
+          git push origin "$SHA:refs/heads/main"

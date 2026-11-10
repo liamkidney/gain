@@ -4,6 +4,7 @@ on:
     branches: [dev]
     paths:
       - '.bootstrap/source.b64'
+      - '.github/workflows/bootstrap.yml'
 permissions:
   contents: write
   actions: write
@@ -25,6 +26,7 @@ jobs:
         run: |
           base64 -d .bootstrap/source.b64 | tar -xJf -
           python -m pip install Pillow
+          mkdir -p app/assets/exercises
           python scripts/make-art.py
           npm run check
           npm run build:dev

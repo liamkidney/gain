@@ -16,7 +16,8 @@
 - [x] Exercise analytics: max weight, estimated 1RM, volume; date ranges and inspect individual sessions
 - [x] IndexedDB local persistence, draft recovery, JSON export/import; offline PWA assets
 - [x] Automated tests and dev/prod build configuration
-- [ ] Enable GitHub Pages in Settings → Pages → Build and deployment → GitHub Actions; deploy and verify the dev site on iPhone. Production stays unreleased until explicit approval.
+- [ ] Deploy dev to GitHub Pages and test in an installed iPhone PWA
+- [ ] Promote to production only after explicit approval and full dev verification
 
 ## Explicitly deferred
 

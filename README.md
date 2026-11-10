@@ -27,7 +27,7 @@ Target GitHub repository: `liamkidney/gain`
 
 Follow the [App Launch Playbook](https://docs.google.com/document/d/19ahc5h3Ffos-NiHdSMScGlMpPcMIBDzgkPJ938F5JCk/edit): `dev` branch for changes, GitHub Actions validates dev and builds both channels into one Pages artifact; `main` is advanced by a gated fast-forward after explicit approval.
 
-**Initial setup:** Create an empty public GitHub repository named `gain` with `main` as its default branch, push this source to `dev` (create `main` as a baseline first), then enable Settings → Pages → Build and deployment → GitHub Actions. Never promote untested dev changes to main. Until first approved production release, a separate minimal baseline is permitted on main.
+**Repository:** Source changes are made on `dev` first. Enable Settings → Pages → Build and deployment → GitHub Actions. Never promote untested dev changes to main. Until first approved production release, `main` contains only an unreleased baseline.
 
 App icons are red for production and blue for development. SW caching and IndexedDB storage are channel-isolated. A build marker in Settings identifies each deployed revision.
 

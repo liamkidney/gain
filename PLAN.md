@@ -16,7 +16,7 @@
 - [x] Exercise analytics: max weight, estimated 1RM, volume; date ranges and inspect individual sessions
 - [x] IndexedDB local persistence, draft recovery, JSON export/import; offline PWA assets
 - [x] Automated tests and dev/prod build configuration
-- [ ] Deploy to GitHub Pages, test on iPhone and verify both deployed channels (requires new `liamkidney/gain` repository)
+- [ ] Enable GitHub Pages in Settings → Pages → Build and deployment → GitHub Actions; deploy and verify the dev site on iPhone. Production stays unreleased until explicit approval.
 
 ## Explicitly deferred
 

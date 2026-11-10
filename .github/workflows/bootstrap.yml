@@ -30,9 +30,11 @@ jobs:
           python scripts/make-art.py
           npm run check
           npm run build:dev
+          rm -rf dist
       - name: Commit restored source to dev
         run: |
-          rm -f .bootstrap/source.b64 .github/workflows/bootstrap.yml
+          rm -f .bootstrap/source.b64
+          git restore --source=HEAD --staged --worktree .github/workflows/check-dev.yml .github/workflows/pages.yml .github/workflows/promote.yml
           rmdir .bootstrap || true
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"

@@ -1,0 +1,65 @@
+name: Publish GitHub Pages
+on:
+  push:
+    branches: [main]
+  workflow_run:
+    workflows: ["Validate dev", "Promote dev to production"]
+    types: [completed]
+  workflow_dispatch:
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: gain-pages
+  cancel-in-progress: false
+jobs:
+  build:
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          path: production
+          fetch-depth: 0
+      - uses: actions/checkout@v4
+        with:
+          ref: dev
+          path: development
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify linear release ancestry
+        run: |
+          git -C development fetch origin main dev
+          git -C development merge-base --is-ancestor origin/main origin/dev
+      - name: Test and build each channel
+        run: |
+          (cd development && npm run check)
+          mkdir -p _site
+          if [ -f production/package.json ]; then
+            (cd production && npm run check)
+            (cd production && CHANNEL=prod BASE_PATH=/gain/ OUTPUT="$GITHUB_WORKSPACE/_site" REVISION="$(git rev-parse --short=8 HEAD)" node scripts/build-pages.mjs)
+          else
+            printf '<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"></head><body><h1>Gain</h1><p>Production not yet released.</p></body></html>' > _site/index.html
+          fi
+          (cd development && CHANNEL=dev BASE_PATH=/gain/dev/ OUTPUT="$GITHUB_WORKSPACE/_site/dev" REVISION="$(git rev-parse --short=8 HEAD)" node scripts/build-pages.mjs)
+          touch _site/.nojekyll
+          test -f _site/index.html
+          test -f _site/dev/index.html
+          test -f _site/dev/apple-touch-icon.png
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

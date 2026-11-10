@@ -2,21 +2,24 @@ name: Validate dev
 on:
   push:
     branches: [dev]
-    paths-ignore:
-      - '.bootstrap/**'
-      - '.github/workflows/bootstrap.yml'
   workflow_dispatch:
 permissions:
   contents: read
 jobs:
-  test:
+  validate:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          ref: dev
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
       - run: npm run check
       - run: npm run build:dev
+      - name: Assert development assets
+        run: |
+          test -f dist/dev/index.html
+          test -f dist/dev/icon-192.png
+          test -f dist/dev/apple-touch-icon.png
+          test -f dist/dev/src/model.js
+          grep -q 'Gain Dev' dist/dev/index.html
+          grep -q 'gain/dev/' dist/dev/manifest.webmanifest

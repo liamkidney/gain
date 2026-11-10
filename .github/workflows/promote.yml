@@ -14,15 +14,16 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Verify ancestry and test exact dev SHA
+      - name: Verify dev contains main and passes checks
         run: |
           git fetch origin main dev
           git merge-base --is-ancestor origin/main origin/dev
           npm run check
           npm run build:prod
           npm run build:dev
-      - name: Fast-forward main
+      - name: Fast-forward production to exactly the validated dev SHA
         run: |
-          SHA=$(git rev-parse HEAD)
-          test "$SHA" = "$(git rev-parse origin/dev)"
-          git push origin "$SHA:refs/heads/main"
+          DEV_SHA=$(git rev-parse origin/dev)
+          test "$DEV_SHA" = "$(git rev-parse HEAD)"
+          git push origin "$DEV_SHA:refs/heads/main"
+          echo "Released $DEV_SHA"

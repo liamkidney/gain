@@ -4,11 +4,11 @@ import {createWorkout,createTemplate,newSet,newEntry,repeatWorkout,startTemplate
 
 function session(date, weight, reps, exerciseId='lat-pulldown') {
   const e=newEntry(exerciseId,[newSet(weight,reps,true),newSet(weight,reps-1,true)]);
-  const w=createWorkout({name:'Pull',date,exercises:[e]});w.status='complete';return w;
+  const w=createWorkout({name:'Pull',date,exercises:[e]});return w;
 }
 
-test('workout starts as an editable empty draft with stable ID',()=>{
-  const w=createWorkout();assert.equal(w.status,'in_progress');assert.equal(w.exercises.length,0);assert.match(w.id,/^[0-9a-f-]{36}$/);
+test('workout saves without a completion lifecycle',()=>{
+  const w=createWorkout();assert.equal('status' in w,false);assert.equal(w.archivedAt,null);assert.equal(w.exercises.length,0);assert.match(w.id,/^[0-9a-f-]{36}$/);
 });
 test('repeat copies the actual historical structure and resets every checkbox',()=>{
   const old=session('2026-11-04',55,8);old.exercises.push(newEntry('dumbbell-bench',[newSet(22,9,true)]));
@@ -43,3 +43,16 @@ test('backup requires compatible schema',()=>{
   const backup={app:'gain',schemaVersion:1,workouts:[session('2026-11-01',40,8)],templates:[],customExercises:[]};assert.equal(sanitizeImport(backup).workouts.length,1);
 });
 test('dates are interpreted as local calendar dates',()=>assert.match(formatDate('2026-11-04'),/4 Nov 2026/));
+
+test('archived workouts are excluded from analytics and previous performance, without deleting data',()=>{
+  const a=session('2026-10-01',40,10);const b=session('2026-11-02',70,8);b.archivedAt='2026-11-08T12:00:00.000Z';
+  const summary=exerciseSeries([a,b],'lat-pulldown');assert.equal(summary.length,1);assert.equal(summary[0].max,40);
+  assert.equal(lastCompletedSets([a,b],'lat-pulldown','2026-11-10')[0].weight,40);
+  assert.equal(b.exercises.length,1);b.archivedAt=null;
+  assert.equal(exerciseSeries([a,b],'lat-pulldown').length,2);
+  assert.equal(lastCompletedSets([a,b],'lat-pulldown','2026-11-10')[0].weight,70);
+});
+test('old workout exports without archivedAt remain included',()=>{
+  const w=session('2026-11-01',40,10);delete w.archivedAt;
+  assert.equal(exerciseSeries([w],'lat-pulldown').length,1);
+});

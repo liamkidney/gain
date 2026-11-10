@@ -1,6 +1,6 @@
 # Gain
 
-A mobile-first resistance training diary for people who know how to train. Log sets, repeat previous workouts, save templates and inspect exercise progression. No coaching algorithm, no login in MVP.
+A mobile-first resistance training diary for people who know how to train. Log sets directly in an editable workout diary, repeat previous workouts, archive entries, save templates and inspect exercise progression. No coaching algorithm, no login in MVP.
 
 ## Getting started
 
@@ -33,9 +33,17 @@ App icons are red for production and blue for development. SW caching and Indexe
 
 ## Local data
 
-Records are stored in IndexedDB (`gain-dev-v1` or `gain-prod-v1`) with logical collections for `workouts`, `templates` and `customExercises`. Each record has a UUID and modification timestamp. Only completed sets count towards analytics. An interrupted workout remains in the inbox for easy recovery.
+Records are stored in IndexedDB (`gain-dev-v1` or `gain-prod-v1`) with logical collections for `workouts`, `templates` and `customExercises`. Each record has a UUID and modification timestamp. Only completed sets count towards analytics. Workouts have no finish/in-progress status: every record is editable at any time. Prefilled sets do not count towards analytics until individually logged. Swipe left on a history row to Repeat or Archive (or use the three-dot action); archived workouts are excluded from statistics and previous-performance suggestions, but are recoverable from Archived.
 
 **Important:** Local browser storage can be cleared or lost when the browser/PWA is removed. Use Settings → Export backup to save a portable JSON backup. JSON import merges by identifier; take a backup first before importing.
+
+## Interface
+
+- **Workouts:** date-circle inbox with divider above the first item. Tap to open an immediately editable workout; it enters from the left. Swipe left for Repeat / Archive, and use Archived to restore.
+- **Templates:** reusable exercise and set structures, opened in the same editor.
+- **Analytics:** exercise history and charts from non-archived, logged sets.
+- All changes save locally without an explicit Finish or Done action.
+- Colours use a restrained graphite, slate-blue and cool-white palette.
 
 ## Structure
 

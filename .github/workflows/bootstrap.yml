@@ -1,0 +1,44 @@
+name: Bootstrap Gain source
+on:
+  push:
+    branches: [dev]
+    paths:
+      - '.bootstrap/source.b64'
+permissions:
+  contents: write
+  actions: write
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: dev
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Restore source and generate original artwork
+        run: |
+          base64 -d .bootstrap/source.b64 | tar -xJf -
+          python -m pip install Pillow
+          python scripts/make-art.py
+          npm run check
+          npm run build:dev
+      - name: Commit restored source to dev
+        run: |
+          rm -f .bootstrap/source.b64 .github/workflows/bootstrap.yml
+          rmdir .bootstrap || true
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Implement Gain local-first MVP"
+          git push origin HEAD:dev
+      - name: Start validation for the restored commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api -X POST "repos/${{ github.repository }}/actions/workflows/check-dev.yml/dispatches" -f ref=dev

@@ -43,3 +43,9 @@
 - Workout history remains fully editable in place, including retrospective entries. Archiving is reversible and excludes archived sets from analytics.
 - Persist local records with stable UUIDs and timestamps; no cloud backend or login during MVP.
 - dev and prod use separate IndexedDB databases to avoid test entries contaminating real history.
+
+## Navigation polish — 10 Nov 2026
+
+- [x] Remove the three-dot action from history rows; swipe left remains the mechanism for Repeat / Archive.
+- [x] Opening a workout slides its screen in from the right (~360 ms); Back slides it out to the right to reveal the prior page.
+- [ ] Confirm the transitions and swipe behaviour on an actual iPhone.

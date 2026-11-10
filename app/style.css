@@ -35,8 +35,6 @@ body{background:#f0f2f3}
 .inbox-item:active{background:#f2f4f5}
 .inbox-item>.date-circle{margin-left:1px}
 .inbox-item>svg{color:#9da6ad;flex-shrink:0}
-.inbox-more{border:0;background:transparent;color:#94a0aa;flex:0 0 31px;height:48px;display:flex;align-items:center;justify-content:center}
-.inbox-more:focus-visible{outline:2px solid #486579;outline-offset:-2px}
 .inbox-main{display:flex;flex-direction:column;min-width:0}
 .inbox-line{width:100%}
 .inbox-line strong{font-size:15px;color:#1c2730;letter-spacing:-.2px}
@@ -115,8 +113,14 @@ body{background:#f0f2f3}
 .chart-point-info{background:#edf2f4}
 .analytics-history-row{color:#385064;border-color:#e1e6e8}
 .toast{background:#23323d}
-@keyframes gain-slide-from-left{from{transform:translateX(-100%);opacity:.82}to{transform:translateX(0);opacity:1}}
-main.enter-from-left{animation:gain-slide-from-left .24s cubic-bezier(.2,.75,.2,1) both}
-@media(prefers-reduced-motion:reduce){main.enter-from-left{animation:none}.inbox-slide{transition:none}}
+/* Page stack: the workout slides over the history; back reveals it underneath. */
+.page-motion{position:relative;min-height:calc(100dvh - 78px);overflow:hidden;isolation:isolate}
+.page-motion>.page-underlay{pointer-events:none}
+.page-motion>.page-enter,.page-motion>.page-exit{position:absolute;inset:0 0 auto;min-height:100%;background:#fcfcfb;z-index:2;will-change:transform}
+@keyframes gain-page-enter{from{transform:translate3d(100%,0,0)}to{transform:translate3d(0,0,0)}}
+@keyframes gain-page-exit{from{transform:translate3d(0,0,0)}to{transform:translate3d(100%,0,0)}}
+.page-motion>.page-enter{animation:gain-page-enter .36s cubic-bezier(.22,.7,.24,1) both}
+.page-motion>.page-exit{animation:gain-page-exit .36s cubic-bezier(.22,.7,.24,1) both;pointer-events:none}
+@media(prefers-reduced-motion:reduce){.page-motion>.page-enter,.page-motion>.page-exit{animation:none}.inbox-slide{transition:none}}
 @media(min-width:600px){.set-head,.set-row{grid-template-columns:42px minmax(110px,1fr) 100px 100px 50px}}
 @media(max-width:360px){.editor-identity{grid-template-columns:minmax(0,1fr) 130px}.set-head,.set-row{grid-template-columns:27px minmax(57px,1.1fr) minmax(44px,.85fr) minmax(44px,.85fr) 36px;gap:4px}.inbox-item{gap:9px}}

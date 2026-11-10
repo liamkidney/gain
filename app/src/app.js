@@ -7,10 +7,10 @@ const BUILD=window.GAIN_BUILD||{channel:'dev',revision:'local',base:'/gain/dev/'
 const root=document.querySelector('#app');
 const store=new LocalStore(BUILD.channel);
 const db={workouts:[],templates:[],customExercises:[]};
-const ui={tab:'workouts',view:'home',recordId:null,recordType:'workouts',pickerSearch:'',pickerMuscle:'All',pickerEquipment:'All',infoExercise:null,pickerReturn:null,fromDetail:null,analyticsExercise:null,metric:'max',range:'quarter',point:null,toast:'',saved:true,infoReturn:'editor',showArchived:false,transition:''};
+const ui={tab:'workouts',view:'home',recordId:null,recordType:'workouts',pickerSearch:'',pickerMuscle:'All',pickerEquipment:'All',infoExercise:null,pickerReturn:null,fromDetail:null,analyticsExercise:null,metric:'max',range:'quarter',point:null,toast:'',saved:true,infoReturn:'editor',showArchived:false,transition:'',homeScrollY:0};
 let writeQueue=Promise.resolve(), toastTimer;
 const esc=s=>String(s??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
-const ico=(name,size=20)=>{const p={archive:'<rect x="4" y="4" width="16" height="5" rx="1"/><path d="M6 9v11h12V9M10 13h4"/>',back:'<path d="m15 18-6-6 6-6"/>',plus:'<path d="M12 5v14M5 12h14"/>',chevron:'<path d="m9 18 6-6-6-6"/>',down:'<path d="m6 9 6 6 6-6"/>',check:'<path d="m20 6-11 11-5-5"/>',repeat:'<path d="m17 2 4 4-4 4M3 11V9a3 3 0 0 1 3-3h15M7 22l-4-4 4-4m14-3v4a3 3 0 0 1-3 3H3"/>',edit:'<path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4z"/>',trash:'<path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14M10 10v6M14 10v6"/>',chart:'<path d="M3 3v18h18M7 16l4-5 4 3 5-8"/>',history:'<path d="M3 12a9 9 0 1 0 3-7M3 3v6h6M12 7v5l3 2"/>',list:'<path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/>',template:'<rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 3v3h6V3M9 11h6M9 15h6"/>',search:'<circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/>',settings:'<path d="M12 2v3m0 14v3M2 12h3m14 0h3M4.9 4.9l2.1 2.1m10 10 2.1 2.1m0-14.2L17 7m-10 10-2.1 2.1"/><circle cx="12" cy="12" r="4"/>',info:'<circle cx="12" cy="12" r="10"/><path d="M12 11v6M12 7h.01"/>',more:'<circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/>',up:'<path d="m6 15 6-6 6 6"/>',download:'<path d="M12 3v12m-5-5 5 5 5-5M4 17v4h16v-4"/>',upload:'<path d="M12 21V9m-5 5 5-5 5 5M4 7V3h16v4"/>',x:'<path d="M18 6 6 18M6 6l12 12"/>',dumbbell:'<path d="m6 6 12 12M2 6l4-4 4 4-4 4zM14 18l4-4 4 4-4 4z"/>',calendar:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4m10-4v4M3 10h18"/>',spark:'<path d="m12 3 2.5 6.5L21 12l-6.5 2.5L12 21l-2.5-6.5L3 12l6.5-2.5z"/>',filter:'<path d="M4 7h16M7 12h10M10 17h4"/>'}[name]||'<circle cx="12" cy="12" r="8"/>';return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${p}</svg>`};
+const ico=(name,size=20)=>{const p={archive:'<rect x="4" y="4" width="16" height="5" rx="1"/><path d="M6 9v11h12V9M10 13h4"/>',back:'<path d="m15 18-6-6 6-6"/>',plus:'<path d="M12 5v14M5 12h14"/>',chevron:'<path d="m9 18 6-6-6-6"/>',down:'<path d="m6 9 6 6 6-6"/>',check:'<path d="m20 6-11 11-5-5"/>',repeat:'<path d="m17 2 4 4-4 4M3 11V9a3 3 0 0 1 3-3h15M7 22l-4-4 4-4m14-3v4a3 3 0 0 1-3 3H3"/>',edit:'<path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4z"/>',trash:'<path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14M10 10v6M14 10v6"/>',chart:'<path d="M3 3v18h18M7 16l4-5 4 3 5-8"/>',history:'<path d="M3 12a9 9 0 1 0 3-7M3 3v6h6M12 7v5l3 2"/>',list:'<path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/>',template:'<rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 3v3h6V3M9 11h6M9 15h6"/>',search:'<circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/>',settings:'<path d="M12 2v3m0 14v3M2 12h3m14 0h3M4.9 4.9l2.1 2.1m10 10 2.1 2.1m0-14.2L17 7m-10 10-2.1 2.1"/><circle cx="12" cy="12" r="4"/>',info:'<circle cx="12" cy="12" r="10"/><path d="M12 11v6M12 7h.01"/>',up:'<path d="m6 15 6-6 6 6"/>',download:'<path d="M12 3v12m-5-5 5 5 5-5M4 17v4h16v-4"/>',upload:'<path d="M12 21V9m-5 5 5-5 5 5M4 7V3h16v4"/>',x:'<path d="M18 6 6 18M6 6l12 12"/>',dumbbell:'<path d="m6 6 12 12M2 6l4-4 4 4-4 4zM14 18l4-4 4 4-4 4z"/>',calendar:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4m10-4v4M3 10h18"/>',spark:'<path d="m12 3 2.5 6.5L21 12l-6.5 2.5L12 21l-2.5-6.5L3 12l6.5-2.5z"/>',filter:'<path d="M4 7h16M7 12h10M10 17h4"/>'}[name]||'<circle cx="12" cy="12" r="8"/>';return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${p}</svg>`};
 const button=(label,action,opts={})=>`<button class="btn ${opts.class||''}" data-action="${action}" ${opts.attrs||''}>${opts.icon?ico(opts.icon,18):''}${label}</button>`;
 const count=(w)=>workoutSummary(w);
 const exercise=(id)=>findExercise(id,db.customExercises)||{id,name:'Unknown exercise',muscle:'Other',equipment:'Other',diagram:'core',instructions:''};
@@ -24,7 +24,7 @@ function enqueue(storeName,record){const snapshot=structuredClone(touch(record))
 function deleteRecord(type,id){db[type]=db[type].filter(x=>x.id!==id);savedIndicator(true);writeQueue=writeQueue.catch(()=>{}).then(()=>store.remove(type,id)).then(()=>savedIndicator(false)).catch(err=>toast('Unable to delete: '+err.message));return writeQueue;}
 function mutate(fn){const record=current();if(!record)return;fn(record);enqueue(ui.recordType,record);render();}
 function goHome(tab='workouts'){ui.tab=tab;ui.view='home';ui.recordId=null;ui.point=null;ui.transition='';render(true);}
-function openRecord(type,id,view='editor'){ui.recordType=type;ui.recordId=id;ui.view=view;ui.transition=type==='workouts'?'from-left':'';render(true);}
+function openRecord(type,id,view='editor'){if(ui.view==='home')ui.homeScrollY=window.scrollY;ui.recordType=type;ui.recordId=id;ui.view=view;ui.transition='push';render(true);}
 function newWorkout(){const w=createWorkout();db.workouts.push(w);enqueue('workouts',w);openRecord('workouts',w.id,'editor');}
 function copyWorkout(id){const old=db.workouts.find(w=>w.id===id);if(!old)return;const w=repeatWorkout(old);db.workouts.push(w);enqueue('workouts',w);openRecord('workouts',w.id,'editor');toast('New workout created from history');}
 function templateWorkout(id){const t=db.templates.find(x=>x.id===id);if(!t)return;const w=startTemplate(t,db.workouts);db.workouts.push(w);enqueue('workouts',w);openRecord('workouts',w.id,'editor');}
@@ -38,8 +38,31 @@ function footer(){return `<nav class="bottom-nav" aria-label="Main navigation">$
 function layout(content,top){
   const previous=window.scrollY;
   const transition=ui.transition;ui.transition='';
-  root.innerHTML=`<div class="shell"><main class="${transition==='from-left'?'enter-from-left':''}">${content}</main>${footer()}<div id="gain-toast" class="toast" ${ui.toast?'':'hidden'}>${esc(ui.toast)}</div></div>`;
-  requestAnimationFrame(()=>{window.scrollTo(0,top?0:previous)});
+  const oldMain=root.querySelector('.shell > main');
+  const animate=oldMain&&(transition==='push'||transition==='pop')&&!window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  // Preserve the preceding page behind the new page, as in a messaging app's thread navigation.
+  const oldContent=animate?oldMain.innerHTML:'';
+  const page=animate?`<div class="page-motion">
+      <main class="${transition==='push'?'page-underlay':'page-target'}" ${transition==='push'?'inert aria-hidden="true"':''}>${transition==='push'?oldContent:content}</main>
+      <main class="${transition==='push'?'page-enter':'page-exit'}" ${transition==='pop'?'inert aria-hidden="true"':''}>${transition==='push'?content:oldContent}</main>
+    </div>`:`<main>${content}</main>`;
+  root.innerHTML=`<div class="shell">${page}${footer()}<div id="gain-toast" class="toast" ${ui.toast?'':'hidden'}>${esc(ui.toast)}</div></div>`;
+  if(animate){
+    const wrapper=root.querySelector('.page-motion');
+    const moving=wrapper.querySelector(transition==='push'?'.page-enter':'.page-exit');
+    let cleaned=false;
+    const finish=()=>{
+      if(cleaned||!wrapper.isConnected)return;
+      cleaned=true;
+      clearTimeout(fallback);
+      const keep=wrapper.querySelector(transition==='push'?'.page-enter':'.page-target');
+      keep.className='';
+      wrapper.replaceWith(keep);
+    };
+    moving.addEventListener('animationend',event=>{if(event.target===moving)finish();},{once:true});
+    const fallback=setTimeout(finish,600);
+  }
+  requestAnimationFrame(()=>window.scrollTo(0,transition==='pop'?ui.homeScrollY:(top?0:previous)));
 }
 function homeWorkouts(){
   const list=db.workouts.filter(w=>Boolean(w.archivedAt)===ui.showArchived).sort(byRecent);
@@ -54,7 +77,7 @@ function homeWorkouts(){
       const parts=w.date.split('-');const date=new Date(`${w.date}T12:00:00`);const c=count(w);
       return `<div class="inbox-swipe" data-swipe-row="${esc(w.id)}">
         <div class="swipe-actions"><button class="swipe-repeat" data-action="repeat-item" data-id="${esc(w.id)}">${ico('repeat',19)}<span>Repeat</span></button><button class="swipe-archive" data-action="archive-item" data-id="${esc(w.id)}">${ico(w.archivedAt?'history':'archive',19)}<span>${w.archivedAt?'Restore':'Archive'}</span></button></div>
-        <div class="inbox-slide"><button class="inbox-item" data-action="open-workout" data-id="${esc(w.id)}"><span class="date-circle"><strong>${Number(parts[2])}</strong><small>${date.toLocaleDateString('en-GB',{month:'short'})}</small></span><span class="inbox-main"><span class="inbox-line"><strong>${esc(w.name||'Workout')}</strong><time>${esc(date.toLocaleDateString('en-GB',{weekday:'short'}))}</time></span><span class="inbox-line secondary"><span>${c.exercises} exercises · ${c.sets} logged sets</span></span></span>${ico('chevron',17)}</button><button class="inbox-more" data-action="reveal-row" data-id="${esc(w.id)}" aria-label="More actions for ${esc(w.name)}" aria-expanded="false">${ico('more',19)}</button></div>
+        <div class="inbox-slide"><button class="inbox-item" data-action="open-workout" data-id="${esc(w.id)}"><span class="date-circle"><strong>${Number(parts[2])}</strong><small>${date.toLocaleDateString('en-GB',{month:'short'})}</small></span><span class="inbox-main"><span class="inbox-line"><strong>${esc(w.name||'Workout')}</strong><time>${esc(date.toLocaleDateString('en-GB',{weekday:'short'}))}</time></span><span class="inbox-line secondary"><span>${c.exercises} exercises · ${c.sets} logged sets</span></span></span>${ico('chevron',17)}</button></div>
       </div>`;
     }).join('')}</div>`:`<div class="empty-state">${ico('dumbbell',36)}<h3>${ui.showArchived?'No archived workouts':'Your diary starts here'}</h3><p>${ui.showArchived?'Archive a workout from the history list to see it here.':'Start a workout or choose a saved template. Your training history appears here.'}</p></div>`}
   </section>`;
@@ -118,7 +141,7 @@ function infoScreen(){const e=exercise(ui.infoExercise);return `${titleBar('Exer
 function homeAnalytics(){const activeWorkouts=db.workouts.filter(w=>!w.archivedAt);const tracked=[...new Set(activeWorkouts.flatMap(w=>w.exercises.filter(e=>e.sets.some(s=>s.completed)).map(e=>e.exerciseId)))];const chosen=ui.analyticsExercise&&tracked.includes(ui.analyticsExercise)?ui.analyticsExercise:tracked[0];ui.analyticsExercise=chosen||null;const name=chosen?exercise(chosen).name:'';const all=chosen?exerciseSeries(activeWorkouts,chosen):[];const earliest=since(ui.range);const points=all.filter(p=>!earliest||p.date>=earliest);const metricLabel={max:'Max weight',oneRM:'Estimated 1RM',volume:'Volume'}[ui.metric];const currentPoint=points.find(p=>p.id===ui.point);const total=activeWorkouts.filter(w=>w.exercises.some(e=>e.sets.some(s=>s.completed))).length;const totalSets=activeWorkouts.reduce((sum,w)=>sum+w.exercises.reduce((n,e)=>n+e.sets.filter(s=>s.completed).length,0),0);return `${titleBar('Analytics',{settings:true})}<section class="screen analytics"><div class="stat-row"><div><strong>${total}</strong><span>Workouts logged</span></div><div><strong>${totalSets}</strong><span>Sets completed</span></div></div>${tracked.length?`<label class="field-label" for="analytics-exercise">Exercise</label><select id="analytics-exercise" class="analytics-select">${tracked.sort((a,b)=>exercise(a).name.localeCompare(exercise(b).name)).map(id=>`<option value="${esc(id)}" ${chosen===id?'selected':''}>${esc(exercise(id).name)}</option>`).join('')}</select><div class="metric-tabs">${[['max','Max weight'],['oneRM','Est. 1RM'],['volume','Volume']].map(([key,label])=>`<button class="${ui.metric===key?'active':''}" data-action="metric" data-id="${key}">${label}</button>`).join('')}</div><div class="chart-card"><div class="chart-title"><div><h3>${esc(metricLabel)}</h3><span>${esc(name)} · ${ui.metric==='volume'?'kg total':'kg'}</span></div></div>${makeChart(points,ui.metric)}<div class="chart-time">${[['month','1M'],['quarter','3M'],['year','1Y'],['all','All']].map(([key,label])=>`<button data-action="range" data-id="${key}" class="${ui.range===key?'active':''}">${label}</button>`).join('')}</div>${currentPoint?`<div class="chart-point-info"><strong>${formatDate(currentPoint.date)}</strong><span>${formatNumber(currentPoint[ui.metric])} kg · ${esc(currentPoint.workout)}</span><button class="quiet-link" data-action="chart-open-workout" data-id="${esc(currentPoint.id)}">Open workout ${ico('chevron',15)}</button></div>`:'<p class="muted small chart-tip">Tap a point to see the recorded workout.</p>'}</div><div class="section-heading"><h3>Exercise history</h3><span class="muted">${all.length} sessions</span></div><div class="analytics-history">${[...all].reverse().map(p=>`<button class="analytics-history-row" data-action="chart-open-workout" data-id="${esc(p.id)}"><span>${formatDate(p.date)}</span><strong>${p.max===null?'–':`${formatNumber(p.max)} kg`}</strong>${ico('chevron',16)}</button>`).join('')}</div><p class="subtle small">Estimated 1RM uses Epley's formula for sets of 12 reps or fewer. Volume is weight × reps across completed sets. Neither should be interpreted as a training recommendation.</p>`:`<div class="empty-state">${ico('chart',36)}<h3>Progress starts with a set</h3><p>Complete sets in your first workout to see exercise charts and history here.</p></div>`}</section>`;}
 function settings(){return `${titleBar('Settings',{back:true})}<section class="screen"><h2>Your data</h2><p class="subtle intro">Gain currently saves everything on this device. There is no account or cloud backup yet.</p>${button('Export JSON backup','export',{class:'outline wide',icon:'download'})}${button('Import JSON backup','import',{class:'outline wide',icon:'upload'})}<input id="backup-file" type="file" accept=".json,application/json" hidden><div class="warning-box"><strong>Keep a backup</strong><p>Clearing browser data or deleting an installed PWA may permanently erase your local workouts. Export periodically.</p></div><h3>App</h3><div class="settings-row"><span>Version</span><strong>${esc(BUILD.channel)} · ${esc(BUILD.revision)}</strong></div><div class="settings-row"><span>Storage</span><strong>IndexedDB (local)</strong></div><div class="settings-row"><span>Units</span><strong>kg</strong></div><p class="subtle small">Development and production use separate local databases. To move data between them, export and import a backup.</p></section>`;}
 function render(top=false){let html;switch(ui.view){case 'detail':html=editor();break;case 'editor':html=editor();break;case 'picker':html=picker();break;case 'info':html=infoScreen();break;case 'settings':html=settings();break;default:html=ui.tab==='workouts'?homeWorkouts():ui.tab==='templates'?homeTemplates():homeAnalytics();}layout(html,top);}
-function back(){switch(ui.view){case 'picker':ui.view='editor';break;case 'info':ui.view=ui.infoReturn;break;case 'editor':ui.view='home';break;case 'detail':ui.view='home';break;case 'settings':ui.view='home';break;default:ui.view='home';}render(true);}
+function back(){const leavingWorkout=(ui.view==='editor'||ui.view==='detail');switch(ui.view){case 'picker':ui.view='editor';break;case 'info':ui.view=ui.infoReturn;break;case 'editor':ui.view='home';break;case 'detail':ui.view='home';break;case 'settings':ui.view='home';break;default:ui.view='home';}if(leavingWorkout)ui.transition='pop';render(true);}
 function requireConfirm(message){return window.confirm(message);}
 function move(array,from,to){if(to<0||to>=array.length)return;const [item]=array.splice(from,1);array.splice(to,0,item);}
 async function exportData(){await writeQueue;const data={app:'gain',schemaVersion:1,exportedAt:now(),workouts:db.workouts,templates:db.templates,customExercises:db.customExercises};const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=`gain-backup-${todayLocal()}.json`;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);}
@@ -132,11 +155,10 @@ function archiveWorkout(id){
   if(ui.view==='editor'&&ui.recordId===id)goHome('workouts');else render();
   toast(archived?'Workout archived · excluded from analytics':'Workout restored');
 }
-function closeSwipeRows(){for(const row of root.querySelectorAll('.inbox-swipe.open')){row.classList.remove('open');row.querySelector('.inbox-more')?.setAttribute('aria-expanded','false');}}
-function revealSwipeRow(id){const row=[...root.querySelectorAll('.inbox-swipe')].find(n=>n.dataset.swipeRow===id);if(!row)return;const open=row.classList.contains('open');closeSwipeRows();row.classList.toggle('open',!open);row.querySelector('.inbox-more')?.setAttribute('aria-expanded',String(!open));}
+function closeSwipeRows(){for(const row of root.querySelectorAll('.inbox-swipe.open'))row.classList.remove('open');}
 let swipeStart=null,suppressSwipeClick=false;
 root.addEventListener('pointerdown',e=>{
-  const row=e.target.closest('.inbox-swipe');if(!row||e.target.closest('.inbox-more'))return;
+  const row=e.target.closest('.inbox-swipe');if(!row||e.target.closest('.swipe-actions'))return;
   swipeStart={id:e.pointerId,row,x:e.clientX,y:e.clientY,dx:0,moving:false};
 });
 root.addEventListener('pointermove',e=>{
@@ -149,7 +171,7 @@ function completeSwipe(e){const s=swipeStart;if(!s||s.id!==e.pointerId)return;sw
   if(!s.moving)return;
   const shouldOpen=s.dx<-45||(s.row.classList.contains('open')&&s.dx<40);
   closeSwipeRows();s.row.querySelector('.inbox-slide')?.style.removeProperty('transform');s.row.classList.remove('swiping');
-  s.row.classList.toggle('open',shouldOpen);s.row.querySelector('.inbox-more')?.setAttribute('aria-expanded',String(shouldOpen));
+  s.row.classList.toggle('open',shouldOpen);
   suppressSwipeClick=true;setTimeout(()=>{suppressSwipeClick=false;},360);
 }
 root.addEventListener('pointerup',completeSwipe);
@@ -168,7 +190,6 @@ case 'repeat-item':copyWorkout(id);break;
 case 'archive-item':archiveWorkout(id);break;
 case 'archive-current':archiveWorkout(ui.recordId);break;
 case 'restore-current':archiveWorkout(ui.recordId);break;
-case 'reveal-row':revealSwipeRow(id);break;
 case 'toggle-archive-view':ui.showArchived=!ui.showArchived;render();break;
 case 'start-template':templateWorkout(ui.recordId);break;
 case 'show-picker':showPicker();break;

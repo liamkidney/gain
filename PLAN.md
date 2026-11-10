@@ -19,6 +19,11 @@
 - [ ] Deploy dev to GitHub Pages and test in an installed iPhone PWA
 - [ ] Promote to production only after explicit approval and full dev verification
 
+## Deployment
+
+- GitHub Pages source: GitHub Actions (confirmed by repository owner on 10 Nov 2026).
+- Development deployment and mobile verification remain pending until the Pages workflow completes successfully.
+
 ## Explicitly deferred
 
 - Login and Supabase account-backed synchronisation, keeping the local-first data layer

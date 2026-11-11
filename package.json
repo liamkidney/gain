@@ -6,7 +6,7 @@
   "description": "Local-first resistance training diary",
   "scripts": {
     "test": "node --test",
-    "check": "node --check app/src/app.js && node --check app/src/numericKeypad.js && node --check app/src/model.js && node --check app/src/storage.js && node --check app/src/charts.js && node --check scripts/build-pages.mjs && npm test",
+    "check": "node --check app/src/app.js && node --check app/src/numericKeypad.js && node --check app/src/plateLoading.js && node --check app/src/model.js && node --check app/src/storage.js && node --check app/src/charts.js && node --check scripts/build-pages.mjs && npm test",
     "build": "node scripts/build-pages.mjs",
     "build:dev": "CHANNEL=dev BASE_PATH=/gain/dev/ OUTPUT=dist/dev node scripts/build-pages.mjs",
     "build:prod": "CHANNEL=prod BASE_PATH=/gain/ OUTPUT=dist/prod node scripts/build-pages.mjs",

@@ -4,6 +4,7 @@
  * keyboard or the extra previous/next/done accessory bar.
  */
 import {lucideIcon} from './lucide.js';
+import {calculatePlateLoading,renderPlateLoading} from './plateLoading.js';
 
 const VALID_FIELDS=new Set(['weight','reps']);
 
@@ -62,9 +63,22 @@ export function installNumericKeypad(root,{onValue}){
   panel.setAttribute('role','group');
   panel.setAttribute('aria-label','Numeric keypad');
   panel.hidden=true;
-  panel.innerHTML=`<div class="gain-numpad-shortcuts" aria-label="Quick adjustments"></div>
-    <div class="gain-numpad-grid" aria-label="Numeric keys"></div>`;
+  panel.innerHTML=`<div class="gain-numpad-keyboard">
+      <div class="gain-numpad-shortcuts" aria-label="Quick adjustments"></div>
+      <div class="gain-numpad-grid" aria-label="Numeric keys"></div>
+    </div>
+    <section class="gain-bar-loading" aria-label="Bar loading guide" hidden>
+      <header class="gain-bar-header">
+        <button type="button" class="gain-bar-back" data-loading-back aria-label="Back to keypad">${lucideIcon('arrow-left',20)}</button>
+        <strong>Bar loading</strong>
+        <button type="button" class="gain-bar-done" data-close aria-label="Done">${lucideIcon('check',19)}</button>
+      </header>
+      <div class="gain-bar-loading-body"></div>
+    </section>`;
   document.body.append(panel);
+  const keyboard=panel.querySelector('.gain-numpad-keyboard');
+  const loading=panel.querySelector('.gain-bar-loading');
+  const loadingBody=panel.querySelector('.gain-bar-loading-body');
   const shortcuts=panel.querySelector('.gain-numpad-shortcuts');
   const grid=panel.querySelector('.gain-numpad-grid');
   let active=null;
@@ -85,8 +99,29 @@ export function installNumericKeypad(root,{onValue}){
     const delta=keypadScrollDelta(field.bottom,pad.top);
     if(delta>0)window.scrollBy(0,delta);
   }
-  function change(key){
+  function syncHeight(){
+    const shell=root.querySelector('.shell');
+    shell?.style.setProperty('--gain-keypad-height',Math.ceil(panel.getBoundingClientRect().height)+'px');
+    requestAnimationFrame(keepFieldVisible);
+  }
+  function showLoading(){
+    if(!active||active.field!=='weight')return;
+    const result=calculatePlateLoading(numericDraftValue(active.text,'weight'));
+    loadingBody.innerHTML=renderPlateLoading(result);
+    keyboard.hidden=true;
+    loading.hidden=false;
+    syncHeight();
+    loading.querySelector('[data-loading-back]')?.focus({preventScroll:true});
+  }
+  function showKeypad(){
     if(!active)return;
+    loading.hidden=true;
+    keyboard.hidden=false;
+    syncHeight();
+    active.trigger.focus({preventScroll:true});
+  }
+  function change(key){
+    if(!active||!loading.hidden)return;
     const next=applyNumericKey(active,key,active.field);
     if(next.text===active.text&&next.fresh===active.fresh)return;
     active={...active,...next};
@@ -105,6 +140,8 @@ export function installNumericKeypad(root,{onValue}){
       trigger.setAttribute('aria-expanded','false');
     }
     panel.hidden=true;
+    loading.hidden=true;
+    keyboard.hidden=false;
     const shell=root.querySelector('.shell');
     shell?.classList.remove('gain-keypad-open');
     shell?.style.removeProperty('--gain-keypad-height');
@@ -124,6 +161,16 @@ export function installNumericKeypad(root,{onValue}){
       (step>0?'Increase ':'Decrease ')+(field==='weight'?'weight':'repetitions')+
       ' by '+Math.abs(step)+(field==='weight'?' kilograms':''),
       'gain-numpad-shortcut')));
+    if(field==='weight'){
+      const plates=document.createElement('button');
+      plates.type='button';
+      plates.className='gain-numpad-plates';
+      plates.setAttribute('data-plates','');
+      plates.setAttribute('aria-label','Show Olympic bar loading');
+      plates.setAttribute('title','Bar loading');
+      plates.innerHTML=lucideIcon('dumbbell',19);
+      shortcuts.append(plates);
+    }
     // The Done control lives at the right edge of the adjustment row.
     const done=document.createElement('button');
     done.type='button';
@@ -144,7 +191,9 @@ export function installNumericKeypad(root,{onValue}){
     panel.hidden=false;
     const shell=root.querySelector('.shell');
     shell?.classList.add('gain-keypad-open');
-    shell?.style.setProperty('--gain-keypad-height',Math.ceil(panel.getBoundingClientRect().height)+'px');
+    loading.hidden=true;
+    keyboard.hidden=false;
+    syncHeight();
     trigger.classList.add('is-editing');
     trigger.setAttribute('aria-expanded','true');
     trigger.focus({preventScroll:true});
@@ -154,6 +203,8 @@ export function installNumericKeypad(root,{onValue}){
     const button=event.target.closest('button');
     if(!button)return;
     if(button.hasAttribute('data-close'))close();
+    else if(button.hasAttribute('data-plates'))showLoading();
+    else if(button.hasAttribute('data-loading-back'))showKeypad();
     else if(button.dataset.key)change(button.dataset.key);
   });
   // Unlike a modal, the rest of the form stays visible and can be scrolled.
@@ -169,6 +220,13 @@ export function installNumericKeypad(root,{onValue}){
     if(!active)return;
     if(event.target.closest?.('input,textarea,select,[contenteditable="true"]')){
       close({restoreFocus:false});
+      return;
+    }
+    if(!loading.hidden){
+      if(event.key==='Escape'){
+        event.preventDefault();
+        showKeypad();
+      }
       return;
     }
     // External keyboards work without any editable HTML input.

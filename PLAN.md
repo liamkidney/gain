@@ -101,3 +101,12 @@
 - [x] Replace the Unicode keypad tick with the vendored Lucide Check icon.
 - [x] Use a 38 × 38 px borderless copper face inside a 44 × 44 px touch target to reduce its visual size without reducing tap accessibility.
 - [ ] Confirm sizing on a physical iPhone.
+
+## Olympic bar loading calculator — 11 Nov 2026
+
+- [x] Add a barbell icon to the weight keypad (not repetition keypad) to inspect how to rack the entered total without changing it.
+- [x] Show a graphical side elevation of one Olympic bar sleeve with the plates in descending size from the collar outward; mirror on the other side.
+- [x] Assume a 20 kg bar with 25, 20, 15, 10, 5, 2.5 and 1.25 kg plates; show the plate count per side, bar weight and total.
+- [x] Explain impossible weights or values below the bar weight rather than guessing a load.
+- [x] Keep the loading guide read-only, with Back to keypad and Done actions; provide tests and offline PWA support.
+- [ ] Verify sizing and interaction on a real iPhone before release.

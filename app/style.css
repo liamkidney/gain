@@ -337,3 +337,61 @@ input::placeholder,textarea::placeholder{color:var(--gain-faint)}
   .gain-numpad-shortcuts,.gain-numpad-grid{gap:5px}
   .gain-numpad-shortcut{font-size:12px}
 }
+
+/* Bar loading mode is a read-only alternative to the weight keypad. */
+.gain-numpad-keyboard[hidden],.gain-bar-loading[hidden]{display:none!important}
+.gain-numpad-plates{
+  flex:0 0 42px;width:42px;min-width:42px;min-height:44px;
+  display:flex;align-items:center;justify-content:center;
+  padding:0;border:1px solid var(--gain-divider);border-radius:10px;
+  background:var(--gain-raised);color:var(--gain-accent-light);
+  touch-action:manipulation;
+}
+.gain-numpad-plates:active{background:#414849}
+.gain-bar-loading{display:flex;flex-direction:column;gap:9px;padding:1px 1px 4px}
+.gain-bar-header{
+  display:grid;grid-template-columns:42px 1fr 42px;align-items:center;
+  gap:8px;min-height:42px;
+}
+.gain-bar-header strong{text-align:center;font-size:15px;color:var(--gain-text)}
+.gain-bar-back,.gain-bar-done{
+  display:flex;align-items:center;justify-content:center;
+  width:42px;height:42px;border-radius:10px;
+  border:1px solid var(--gain-divider);background:var(--gain-raised);
+  color:var(--gain-text);
+}
+.gain-bar-done{
+  border:0;background:var(--gain-accent);color:var(--gain-bg);
+  width:38px;height:38px;justify-self:center;
+}
+.gain-bar-loading-body{display:flex;flex-direction:column;gap:8px}
+.gain-plate-total{
+  display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;
+  gap:3px 10px;
+}
+.gain-plate-total strong{font-size:18px;font-variant-numeric:tabular-nums}
+.gain-plate-total span{font-size:12px;color:var(--gain-muted)}
+.gain-plate-illustration{
+  border:1px solid var(--gain-divider);border-radius:12px;
+  background:var(--gain-bg);padding:4px 7px;
+}
+.gain-plate-illustration svg{display:block;width:100%;max-height:132px}
+.gain-plate-sleeve{font-size:11px;color:var(--gain-muted);margin:0;text-align:center}
+.gain-plate-list{display:flex;flex-wrap:wrap;gap:6px}
+.gain-plate-chip{
+  display:inline-flex;align-items:center;gap:5px;
+  border:1px solid var(--gain-divider);border-radius:7px;
+  background:var(--gain-raised);padding:5px 8px;
+  font-size:12px;white-space:nowrap;
+}
+.gain-plate-chip strong{font-weight:700}
+.gain-plate-dot{width:10px;height:10px;border-radius:3px;flex:0 0 auto}
+.gain-plate-empty{font-size:13px;color:var(--gain-muted)}
+.gain-plate-mirror{margin:0;font-size:13px;color:var(--gain-text);font-weight:650}
+.gain-plate-assumptions{margin:0;font-size:11px;color:var(--gain-muted);line-height:1.35}
+.gain-plate-message{margin:8px 0;font-size:14px;line-height:1.45;color:var(--gain-text)}
+@media(max-width:360px){
+  .gain-numpad-plates{flex-basis:38px;width:38px;min-width:38px}
+  .gain-numpad-shortcuts{gap:4px}
+  .gain-numpad-shortcut{font-size:12px}
+}

@@ -1,6 +1,6 @@
 const REV='__REVISION__', CHANNEL='__CHANNEL__', BASE='__BASE_PATH__';
 const CACHE=`gain-${CHANNEL}-${REV}`;
-const STATIC=['./','./index.html','./style.css','./src/app.js','./src/model.js','./src/storage.js','./src/charts.js','./src/catalog.js','./src/numericKeypad.js','./manifest.webmanifest','./favicon.svg','./icon-192.png','./icon-512.png',...['press','fly','squat','hinge','extension','lunge','curl','pull','row','ohp','raise','pushdown','calf','core','carry','thrust','hip-thrust'].map(x=>`./assets/exercises/${x}.svg`)];
+const STATIC=['./','./index.html','./style.css','./src/app.js','./src/model.js','./src/storage.js','./src/charts.js','./src/catalog.js','./src/numericKeypad.js','./src/plateLoading.js','./manifest.webmanifest','./favicon.svg','./icon-192.png','./icon-512.png',...['press','fly','squat','hinge','extension','lunge','curl','pull','row','ohp','raise','pushdown','calf','core','carry','thrust','hip-thrust'].map(x=>`./assets/exercises/${x}.svg`)];
 self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(STATIC.map(p=>new Request(p,{cache:'reload'})))).then(()=>self.skipWaiting())));
 self.addEventListener('activate',e=>e.waitUntil((async()=>{for(const key of await caches.keys())if(key.startsWith(`gain-${CHANNEL}-`)&&key!==CACHE)await caches.delete(key);await self.clients.claim();})()));
 self.addEventListener('fetch',e=>{

@@ -1,6 +1,7 @@
 /**
  * iOS Safari does not allow extra keys inside the native keyboard.
- * This accessory toolbar follows the VisualViewport so it sits above that keyboard.
+ * This accessory toolbar follows document-space VisualViewport coordinates
+ * rather than a fixed bottom offset, avoiding the iOS keyboard overlay.
  */
 export function stepNumericValue(raw,field,delta){
   if(field!=='weight'&&field!=='reps')throw new TypeError('Unknown numeric field');
@@ -10,8 +11,17 @@ export function stepNumericValue(raw,field,delta){
   if(field==='reps')return Math.max(0,Math.round(base)+Math.trunc(delta));
   return Math.max(0,Math.round((base+delta)*100)/100);
 }
-export function keyboardBottomOffset(layoutHeight,visualHeight,visualTop=0){
-  return Math.max(0,Math.round(layoutHeight-visualHeight-visualTop));
+// Absolute document coordinates avoid iOS WebKit's unreliable fixed-position
+// containing block while the virtual keyboard shifts the visual viewport.
+export function keyboardToolbarPosition(viewport,toolbarHeight){
+  const top=Number.isFinite(viewport.pageTop)?viewport.pageTop:0;
+  const height=Number.isFinite(viewport.height)?viewport.height:0;
+  const left=Number.isFinite(viewport.pageLeft)?viewport.pageLeft:0;
+  const width=Number.isFinite(viewport.width)?viewport.width:0;
+  return {
+    top:Math.max(0,Math.round(top+height-Math.max(0,toolbarHeight))),
+    centerX:Math.round(left+width/2)
+  };
 }
 export function installNumericToolbar(root,{onStep}){
   const toolbar=document.createElement('div');
@@ -25,13 +35,33 @@ export function installNumericToolbar(root,{onStep}){
     activeInput=null;
     toolbar.hidden=true;
     toolbar.replaceChildren();
+    for(const id of settleTimers)clearTimeout(id);
+    settleTimers=[];
   };
   const position=()=>{
     if(toolbar.hidden)return;
     const vv=window.visualViewport;
-    toolbar.style.bottom=(vv
-      ?keyboardBottomOffset(window.innerHeight,vv.height,vv.offsetTop)
-      :0)+'px';
+    const view=vv&&Number.isFinite(vv.height)&&vv.height>0?{
+      pageTop:Number.isFinite(vv.pageTop)?vv.pageTop:window.scrollY+(vv.offsetTop||0),
+      pageLeft:Number.isFinite(vv.pageLeft)?vv.pageLeft:window.scrollX+(vv.offsetLeft||0),
+      height:vv.height,
+      width:vv.width
+    }:{
+      pageTop:window.scrollY,
+      pageLeft:window.scrollX,
+      height:window.innerHeight,
+      width:window.innerWidth
+    };
+    const point=keyboardToolbarPosition(view,toolbar.offsetHeight);
+    toolbar.style.top=point.top+'px';
+    toolbar.style.left=point.centerX+'px';
+  };
+  // iOS standalone PWAs can report an early/incorrect viewport size during
+  // the keyboard opening animation. Sample it again once things settle.
+  let settleTimers=[];
+  const settle=()=>{
+    for(const id of settleTimers)clearTimeout(id);
+    settleTimers=[80,200,400].map(delay=>setTimeout(position,delay));
   };
   function show(input){
     activeInput=input;
@@ -62,7 +92,8 @@ export function installNumericToolbar(root,{onStep}){
     toolbar.append(done);
     toolbar.hidden=false;
     position();
-    requestAnimationFrame(position);
+    requestAnimationFrame(()=>requestAnimationFrame(position));
+    settle();
   }
   root.addEventListener('focusin',event=>{
     if(event.target.matches('input[data-edit="weight"],input[data-edit="reps"]'))show(event.target);
@@ -97,6 +128,8 @@ export function installNumericToolbar(root,{onStep}){
   window.visualViewport?.addEventListener('resize',position);
   window.visualViewport?.addEventListener('scroll',position);
   window.addEventListener('resize',position);
+  window.addEventListener('scroll',position,{passive:true});
+  window.addEventListener('orientationchange',settle);
   return {sync:()=>{
     if(activeInput&&!activeInput.isConnected)hide();
     else position();

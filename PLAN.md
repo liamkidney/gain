@@ -69,3 +69,9 @@
 - [x] Add a native-keyboard accessory toolbar for weight (−5, −2.5, +2.5, +5 kg) and reps (−1, +1), plus Done; preserve focus while shortcuts update and save values.
 - [x] Isolate entire incoming/outgoing pages so history dividers and headers cannot overpaint the animated workout screen, including swipe back.
 - [ ] Verify keyboard toolbar placement and transition behaviour in an installed iPhone PWA.
+
+## Keyboard toolbar correction — 11 Nov 2026
+
+- [x] Fix the numeric shortcut toolbar being covered by iOS's native keyboard by positioning from the visible viewport in document coordinates rather than using `position: fixed` and a bottom inset.
+- [x] Recalculate on visual viewport and page scroll, including a delayed pass while the iOS keyboard opens.
+- [ ] Confirm toolbar sits immediately above the keyboard in installed Gain Dev on a physical iPhone.

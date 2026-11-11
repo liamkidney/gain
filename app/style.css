@@ -262,10 +262,10 @@ input::placeholder,textarea::placeholder{color:var(--gain-faint)}
 
 /* Native numeric keyboard remains in use; these shortcuts float just above it. */
 .numeric-toolbar{
-  position:fixed;
+  position:absolute;
   left:50%;
   transform:translateX(-50%);
-  bottom:0;
+  top:0;
   z-index:30;
   width:min(100%,740px);
   min-height:55px;

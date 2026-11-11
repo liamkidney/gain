@@ -34,7 +34,7 @@ function templateWorkout(id){const t=db.templates.find(x=>x.id===id);if(!t)retur
 function newTemplate(){const t=createTemplate();db.templates.push(t);enqueue('templates',t);openRecord('templates',t.id,'editor');}
 function showPicker(){ui.pickerReturn='editor';ui.view='picker';ui.pickerSearch='';ui.pickerMuscle='All';ui.pickerEquipment='All';render(true);}
 function selectExercise(id){const record=current();if(!record)return;const prev=ui.recordType==='workouts'?lastCompletedSets(db.workouts,id,record.date,record.id):[];const sets=prev.length?prev.map(s=>newSet(s.weight,s.reps)):Array.from({length:3},()=>newSet());record.exercises.push(newEntry(id,sets));enqueue(ui.recordType,record);ui.view='editor';render(true);toast('Exercise added');}
-function persistNumericButton(button,value){
+function persistNumericButton(button,text,value){
   const field=button.dataset.field;
   if(field!=='weight'&&field!=='reps')return;
   const entryIndex=Number(button.dataset.entry),setIndex=Number(button.dataset.set);
@@ -43,7 +43,7 @@ function persistNumericButton(button,value){
   const parsed=finiteOrNull(value);
   if(field==='reps'&&parsed!==null&&!Number.isInteger(parsed))return;
   // Update only this cell: the keypad stays open while changes auto-save.
-  button.textContent=parsed===null?'–':formatNumber(parsed);
+  button.textContent=text===''?'–':text;
   button.classList.toggle('is-empty',parsed===null);
   button.setAttribute('aria-label',
     `Set ${setIndex+1} ${field==='weight'?'weight in kilograms':'repetitions'}, ${parsed===null?'empty':parsed}`);
@@ -141,8 +141,8 @@ function editorExercise(entry,i,template,record){
         return `<div class="set-row ${s.completed?'completed':''}">
           <div class="set-number"><span>${j+1}</span><button class="remove-set" data-action="remove-set" data-entry="${i}" data-set="${j}" aria-label="Remove set ${j+1}">×</button></div>
           ${template?'':`<div class="previous-cell">${old?`${formatNumber(old.weight)} × ${formatNumber(old.reps)}`:'–'}</div>`}
-          <button type="button" class="set-value-button ${s.weight===null?'is-empty':''}" data-action="edit-set-value" data-field="weight" data-entry="${i}" data-set="${j}" aria-haspopup="dialog" aria-label="Set ${j+1} weight in kilograms, ${s.weight===null?'empty':s.weight}">${s.weight===null?'–':formatNumber(s.weight)}</button>
-          <button type="button" class="set-value-button ${s.reps===null?'is-empty':''}" data-action="edit-set-value" data-field="reps" data-entry="${i}" data-set="${j}" aria-haspopup="dialog" aria-label="Set ${j+1} repetitions, ${s.reps===null?'empty':s.reps}">${s.reps===null?'–':formatNumber(s.reps)}</button>
+          <button type="button" class="set-value-button ${s.weight===null?'is-empty':''}" data-action="edit-set-value" data-field="weight" data-entry="${i}" data-set="${j}" aria-controls="gain-numpad" aria-expanded="false" aria-label="Set ${j+1} weight in kilograms, ${s.weight===null?'empty':s.weight}">${s.weight===null?'–':formatNumber(s.weight)}</button>
+          <button type="button" class="set-value-button ${s.reps===null?'is-empty':''}" data-action="edit-set-value" data-field="reps" data-entry="${i}" data-set="${j}" aria-controls="gain-numpad" aria-expanded="false" aria-label="Set ${j+1} repetitions, ${s.reps===null?'empty':s.reps}">${s.reps===null?'–':formatNumber(s.reps)}</button>
           ${template?'':`<button data-action="toggle-set" data-entry="${i}" data-set="${j}" class="done-check ${s.completed?'checked':''}" aria-label="${s.completed?'Unlog':'Log'} set ${j+1}" aria-pressed="${Boolean(s.completed)}">${s.completed?ico('check',17):''}</button>`}
         </div>`;
       }).join('')}
@@ -195,7 +195,7 @@ function completeSwipe(e){const s=swipeStart;if(!s||s.id!==e.pointerId)return;sw
 }
 root.addEventListener('pointerup',completeSwipe);
 root.addEventListener('pointercancel',e=>{const s=swipeStart;if(!s)return;swipeStart=null;s.row.querySelector('.inbox-slide')?.style.removeProperty('transform');s.row.classList.remove('swiping');});
-const numericKeypad=installNumericKeypad(root,{onValue:(button,value)=>persistNumericButton(button,value)});
+const numericKeypad=installNumericKeypad(root,{onValue:(button,text,value)=>persistNumericButton(button,text,value)});
 const backGesture=installBackSwipe(root,{
   canStart:()=>ui.view==='editor'||ui.view==='detail',
   homeMarkup:()=>ui.tab==='workouts'?homeWorkouts():ui.tab==='templates'?homeTemplates():homeAnalytics(),
@@ -228,7 +228,7 @@ case 'edit-set-value':{
   const entry=current()?.exercises[entryIndex],set=entry?.sets[setIndex];
   const field=target.dataset.field;
   if(set&&(field==='weight'||field==='reps'))
-    numericKeypad.open(target,{field,value:set[field],description:`${exercise(entry.exerciseId).name} · Set ${setIndex+1}`});
+    numericKeypad.open(target,{field,value:set[field]});
   break;
 }
 case 'toggle-set':{const s=current()?.exercises[entryIndex]?.sets[setIndex];if(s&&!s.completed&&(s.weight===null&&s.reps===null)){toast('Enter the weight or reps first.');break;}mutate(r=>{const set=r.exercises[entryIndex]?.sets[setIndex];if(set)set.completed=!set.completed;});break;}

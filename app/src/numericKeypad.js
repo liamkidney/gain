@@ -47,30 +47,23 @@ export function applyNumericKey(state,key,field){
   return {text:next,fresh:false};
 }
 
+
+/** Number of pixels needed to raise the selected cell above the keypad. */
+export function keypadScrollDelta(fieldBottom,keypadTop,margin=16){
+  return Math.max(0,Math.ceil(fieldBottom-keypadTop+margin));
+}
+
 export function installNumericKeypad(root,{onValue}){
-  const backdrop=document.createElement('div');
-  backdrop.className='gain-numpad-backdrop';
-  backdrop.hidden=true;
   const panel=document.createElement('section');
+  panel.id='gain-numpad';
   panel.className='gain-numpad';
-  panel.setAttribute('role','dialog');
-  panel.setAttribute('aria-modal','true');
-  panel.setAttribute('aria-labelledby','gain-numpad-title');
-  panel.tabIndex=-1;
+  panel.setAttribute('role','group');
+  panel.setAttribute('aria-label','Numeric keypad');
   panel.hidden=true;
-  panel.innerHTML=`<div class="gain-numpad-heading">
-      <div><h2 id="gain-numpad-title"></h2><p class="gain-numpad-context"></p></div>
-      <span class="gain-numpad-unit"></span>
-    </div>
-    <div class="gain-numpad-display" role="status" aria-live="polite" aria-atomic="true"></div>
-    <div class="gain-numpad-shortcuts" aria-label="Quick adjustments"></div>
+  panel.innerHTML=`<div class="gain-numpad-shortcuts" aria-label="Quick adjustments"></div>
     <div class="gain-numpad-grid" aria-label="Numeric keys"></div>
     <button type="button" class="gain-numpad-done" data-close>Done</button>`;
-  document.body.append(backdrop,panel);
-  const title=panel.querySelector('#gain-numpad-title');
-  const context=panel.querySelector('.gain-numpad-context');
-  const unit=panel.querySelector('.gain-numpad-unit');
-  const display=panel.querySelector('.gain-numpad-display');
+  document.body.append(panel);
   const shortcuts=panel.querySelector('.gain-numpad-shortcuts');
   const grid=panel.querySelector('.gain-numpad-grid');
   let active=null;
@@ -84,32 +77,39 @@ export function installNumericKeypad(root,{onValue}){
     button.setAttribute('aria-label',aria||label);
     return button;
   }
-  function paint(){
-    if(!active)return;
-    display.textContent=active.text||'—';
+  function keepFieldVisible(){
+    if(!active||!active.trigger.isConnected||panel.hidden)return;
+    const field=active.trigger.getBoundingClientRect();
+    const pad=panel.getBoundingClientRect();
+    const delta=keypadScrollDelta(field.bottom,pad.top);
+    if(delta>0)window.scrollBy(0,delta);
   }
   function change(key){
     if(!active)return;
     const next=applyNumericKey(active,key,active.field);
     if(next.text===active.text&&next.fresh===active.fresh)return;
     active={...active,...next};
-    paint();
-    onValue(active.trigger,numericDraftValue(active.text,active.field));
+    // The workout cell itself is the display; preserve partial decimals while typing.
+    onValue(active.trigger,active.text,numericDraftValue(active.text,active.field));
   }
   function close({restoreFocus=true}={}){
     if(!active)return;
-    const trigger=active.trigger;
+    const {trigger,field,text}=active;
     active=null;
-    panel.hidden=true;
-    backdrop.hidden=true;
-    root.inert=false;
-    if(restoreFocus&&trigger.isConnected){
-      trigger.focus({preventScroll:true});
-    }else if(document.activeElement===panel){
-      panel.blur();
+    if(trigger.isConnected){
+      // Canonicalize drafts such as "60." or "003" when editing ends.
+      const value=numericDraftValue(text,field);
+      onValue(trigger,value===null?'':String(value),value);
+      trigger.classList.remove('is-editing');
+      trigger.setAttribute('aria-expanded','false');
     }
+    panel.hidden=true;
+    const shell=root.querySelector('.shell');
+    shell?.classList.remove('gain-keypad-open');
+    shell?.style.removeProperty('--gain-keypad-height');
+    if(restoreFocus&&trigger.isConnected)trigger.focus({preventScroll:true});
   }
-  function open(trigger,{field,value,description}){
+  function open(trigger,{field,value}){
     if(!VALID_FIELDS.has(field))return;
     if(active)close({restoreFocus:false});
     active={
@@ -117,9 +117,6 @@ export function installNumericKeypad(root,{onValue}){
       text:value===null||value===undefined?'':String(value),
       fresh:true
     };
-    title.textContent=field==='weight'?'Weight':'Repetitions';
-    context.textContent=description||'';
-    unit.textContent=field==='weight'?'kg':'reps';
     const steps=field==='weight'?[-5,-2.5,2.5,5]:[-1,1];
     shortcuts.replaceChildren(...steps.map(step=>keyButton(
       'step:'+step,step>0?'+'+step:String(step).replace('-','−'),
@@ -134,18 +131,15 @@ export function installNumericKeypad(root,{onValue}){
       key==='decimal'?'Decimal point':key==='clear'?'Clear value':
       key==='backspace'?'Delete last digit':key,
       'gain-numpad-key')));
-    paint();
-    backdrop.hidden=false;
+    panel.setAttribute('aria-label',field==='weight'?'Weight keypad':'Repetitions keypad');
     panel.hidden=false;
-    root.inert=true;
-    panel.focus({preventScroll:true});
-    // Keep the selected set visible above the keypad where practical.
-    requestAnimationFrame(()=>{
-      if(!active||active.trigger!==trigger)return;
-      const rect=trigger.getBoundingClientRect();
-      const available=panel.getBoundingClientRect().top-18;
-      if(rect.bottom>available)window.scrollBy(0,rect.bottom-available);
-    });
+    const shell=root.querySelector('.shell');
+    shell?.classList.add('gain-keypad-open');
+    shell?.style.setProperty('--gain-keypad-height',Math.ceil(panel.getBoundingClientRect().height)+'px');
+    trigger.classList.add('is-editing');
+    trigger.setAttribute('aria-expanded','true');
+    trigger.focus({preventScroll:true});
+    requestAnimationFrame(keepFieldVisible);
   }
   panel.addEventListener('click',event=>{
     const button=event.target.closest('button');
@@ -153,9 +147,21 @@ export function installNumericKeypad(root,{onValue}){
     if(button.hasAttribute('data-close'))close();
     else if(button.dataset.key)change(button.dataset.key);
   });
-  backdrop.addEventListener('click',()=>close());
+  // Unlike a modal, the rest of the form stays visible and can be scrolled.
+  // Tapping another cell switches the keypad directly to that cell.
+  document.addEventListener('pointerdown',event=>{
+    if(!active||panel.contains(event.target))return;
+    if(event.target.closest?.('[data-action="edit-set-value"]'))return;
+    close({restoreFocus:false});
+  },true);
+  window.addEventListener('resize',()=>requestAnimationFrame(keepFieldVisible));
+  window.visualViewport?.addEventListener('resize',()=>requestAnimationFrame(keepFieldVisible));
   document.addEventListener('keydown',event=>{
     if(!active)return;
+    if(event.target.closest?.('input,textarea,select,[contenteditable="true"]')){
+      close({restoreFocus:false});
+      return;
+    }
     // External keyboards work without any editable HTML input.
     let key=null;
     if(/^[0-9]$/.test(event.key))key=event.key;
@@ -166,17 +172,13 @@ export function installNumericKeypad(root,{onValue}){
       event.preventDefault();
       close();
       return;
-    }else if(event.key==='Enter'&&event.target===panel){
+    }else if(event.key==='Enter'&&event.target===active.trigger){
       event.preventDefault();
       close();
       return;
     }else if(event.key==='Tab'){
-      // Keep keyboard focus inside the modal while it is open.
-      const buttons=Array.from(panel.querySelectorAll('button:not([disabled])'));
-      const i=buttons.indexOf(document.activeElement);
-      const next=event.shiftKey?(i<=0?buttons.length-1:i-1):(i<0||i===buttons.length-1?0:i+1);
-      event.preventDefault();
-      buttons[next]?.focus();
+      // Allow normal focus navigation instead of trapping focus.
+      close({restoreFocus:false});
       return;
     }
     if(key!==null){

@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import {applyNumericKey,numericDraftValue,stepNumericValue} from '../app/src/numericKeypad.js';
+import {applyNumericKey,numericDraftValue,stepNumericValue,keypadScrollDelta} from '../app/src/numericKeypad.js';
 
 const press=(field,initial,keys)=>{
   let state={text:initial,fresh:true};
@@ -56,4 +56,24 @@ test('workout logging uses buttons and never focuses a native numeric input',()=
   assert.match(css,/\.gain-numpad\s*\{/);
   assert.doesNotMatch(css,/\.numeric-toolbar\s*\{/);
   assert.match(sw,/\.\/src\/numericKeypad\.js/);
+});
+
+test('the selected field stays above the keypad without unnecessary page movement',()=>{
+  assert.equal(keypadScrollDelta(700,360),356);
+  assert.equal(keypadScrollDelta(260,360),0);
+  assert.equal(keypadScrollDelta(345,360),1);
+  assert.equal(keypadScrollDelta(360,360),16);
+});
+
+test('keypad contains buttons only and writes directly to its selected field',()=>{
+  const keypad=fs.readFileSync('app/src/numericKeypad.js','utf8');
+  const app=fs.readFileSync('app/src/app.js','utf8');
+  const css=fs.readFileSync('app/style.css','utf8');
+  assert.doesNotMatch(keypad,/gain-numpad-display|gain-numpad-heading|gain-numpad-context|backdrop/);
+  assert.match(keypad,/onValue\(active\.trigger,active\.text,numericDraftValue/);
+  assert.match(keypad,/requestAnimationFrame\(keepFieldVisible\)/);
+  assert.match(keypad,/shell\?\.classList\.add\('gain-keypad-open'\)/);
+  assert.match(app,/button\.textContent=text===''\?'–':text/);
+  assert.match(css,/\.set-row \.set-value-button\.is-editing/);
+  assert.match(css,/\.shell\.gain-keypad-open main/);
 });

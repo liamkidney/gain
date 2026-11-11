@@ -274,40 +274,34 @@ input::placeholder,textarea::placeholder{color:var(--gain-faint)}
   outline:2px solid var(--gain-accent-light);
   outline-offset:1px;
 }
-.gain-numpad-backdrop{
-  position:fixed;inset:0;z-index:39;
-  background:rgba(0,0,0,.55);
+/* In-app keypad: buttons only; the selected cell is the live value display. */
+.set-row .set-value-button.is-editing{
+  border-color:var(--gain-accent);
+  outline:2px solid var(--gain-accent-light);
+  outline-offset:1px;
+  background:#35312e;
+}
+.shell.gain-keypad-open main{
+  padding-bottom:calc(var(--gain-keypad-height, 338px) + 24px);
 }
 .gain-numpad{
   position:fixed;bottom:0;left:50%;transform:translateX(-50%);
   z-index:40;width:min(100%,740px);
-  max-height:92dvh;overflow-y:auto;
-  padding:15px 15px calc(13px + env(safe-area-inset-bottom));
-  border:1px solid var(--gain-divider);
-  border-bottom:0;border-radius:20px 20px 0 0;
-  background:var(--gain-bg);box-shadow:0 -12px 45px #0007;
-  color:var(--gain-text);overscroll-behavior:contain;
+  max-height:72dvh;overflow-y:auto;
+  padding:10px 12px calc(11px + env(safe-area-inset-bottom));
+  border-top:1px solid var(--gain-divider);
+  background:var(--gain-surface);
+  box-shadow:0 -10px 30px #0006;
+  color:var(--gain-text);
+  overscroll-behavior:contain;
 }
-.gain-numpad[hidden],.gain-numpad-backdrop[hidden]{display:none!important}
-.gain-numpad-heading{
-  display:flex;align-items:center;justify-content:space-between;
-  margin:0 2px 6px;gap:12px;
-}
-.gain-numpad-heading h2{font-size:15px;font-weight:750;margin:0;letter-spacing:-.2px}
-.gain-numpad-context{font-size:11px;color:var(--gain-muted);margin:3px 0 0}
-.gain-numpad-unit{font-size:13px;font-weight:700;color:var(--gain-muted)}
-.gain-numpad-display{
-  min-height:52px;display:flex;align-items:center;justify-content:center;
-  font-size:32px;font-weight:750;font-variant-numeric:tabular-nums;
-  letter-spacing:-.6px;line-height:1.15;
-}
+.gain-numpad[hidden]{display:none!important}
 .gain-numpad-shortcuts{
   display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);
-  gap:7px;margin:4px 0 10px;
+  gap:7px;margin:0 0 9px;
 }
 .gain-numpad-grid{
-  display:grid;grid-template-columns:repeat(3,minmax(0,1fr));
-  gap:7px;
+  display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;
 }
 .gain-numpad-shortcut,.gain-numpad-key,.gain-numpad-done{
   border:1px solid var(--gain-divider);border-radius:10px;
@@ -321,7 +315,7 @@ input::placeholder,textarea::placeholder{color:var(--gain-faint)}
 .gain-numpad-key[data-key="backspace"]{font-size:25px}
 .gain-numpad-shortcut:active,.gain-numpad-key:active{background:#414849}
 .gain-numpad-done{
-  width:100%;min-height:44px;margin-top:11px;border-color:transparent;
+  width:100%;min-height:44px;margin-top:9px;border-color:transparent;
   background:var(--gain-accent);color:var(--gain-bg);font-size:15px;
 }
 .gain-numpad-done:active{background:var(--gain-accent-light)}
@@ -329,8 +323,7 @@ input::placeholder,textarea::placeholder{color:var(--gain-faint)}
   outline:2px solid var(--gain-accent-light);outline-offset:2px;
 }
 @media(max-height:630px){
-  .gain-numpad{padding-top:9px;padding-bottom:calc(7px + env(safe-area-inset-bottom))}
-  .gain-numpad-display{min-height:38px;font-size:27px}
+  .gain-numpad{padding-top:7px;padding-bottom:calc(7px + env(safe-area-inset-bottom))}
   .gain-numpad-key{min-height:43px}
   .gain-numpad-shortcut{min-height:38px}
 }

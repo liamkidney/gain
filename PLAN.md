@@ -82,3 +82,11 @@
 - [x] Weight quick adjustments: −5, −2.5, +2.5, +5 kg. Rep quick adjustments: −1, +1. Support decimal weights, backspace, clear, Done, external keyboards and focus trapping.
 - [x] Keep autosaving every edit without rerendering the workout; cache the keypad for offline PWA use.
 - [ ] Test the keypad's layout, scrolling, tap targets and accessibility on a physical iPhone before promoting.
+
+## Numeric keypad refinement — 11 Nov 2026
+
+- [x] Remove the keypad's duplicated title, context and value display; show buttons only.
+- [x] Write each keystroke directly into the selected workout weight/reps cell, including intermediate decimals.
+- [x] Highlight the selected cell and automatically scroll the page enough to keep it above the keypad.
+- [x] Remove the backdrop; allow changing to another numeric cell without dismissing the keypad.
+- [ ] Confirm keypad placement and field visibility on a physical iPhone.

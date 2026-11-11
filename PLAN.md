@@ -90,3 +90,8 @@
 - [x] Highlight the selected cell and automatically scroll the page enough to keep it above the keypad.
 - [x] Remove the backdrop; allow changing to another numeric cell without dismissing the keypad.
 - [ ] Confirm keypad placement and field visibility on a physical iPhone.
+
+## Keypad Done placement — 11 Nov 2026
+
+- [x] Place the Done control at the right of the quick-adjustment row as a copper tick button, removing the full-width bottom button.
+- [ ] Verify compact keypad layout on iPhone before production.

@@ -297,7 +297,7 @@ input::placeholder,textarea::placeholder{color:var(--gain-faint)}
 }
 .gain-numpad[hidden]{display:none!important}
 .gain-numpad-shortcuts{
-  display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);
+  display:flex;align-items:stretch;
   gap:7px;margin:0 0 9px;
 }
 .gain-numpad-grid{
@@ -309,14 +309,15 @@ input::placeholder,textarea::placeholder{color:var(--gain-faint)}
   font-weight:700;touch-action:manipulation;
   -webkit-tap-highlight-color:transparent;
 }
-.gain-numpad-shortcut{min-width:0;min-height:43px;padding:6px 3px;font-size:14px}
+.gain-numpad-shortcut{flex:1 1 0;min-width:0;min-height:44px;padding:6px 3px;font-size:14px}
 .gain-numpad-key{min-height:52px;font-size:23px;font-weight:550}
 .gain-numpad-key[data-key="clear"]{font-size:14px;font-weight:700}
 .gain-numpad-key[data-key="backspace"]{font-size:25px}
 .gain-numpad-shortcut:active,.gain-numpad-key:active{background:#414849}
 .gain-numpad-done{
-  width:100%;min-height:44px;margin-top:9px;border-color:transparent;
-  background:var(--gain-accent);color:var(--gain-bg);font-size:15px;
+  flex:0 0 44px;min-width:44px;min-height:44px;border-color:transparent;
+  background:var(--gain-accent);color:var(--gain-bg);
+  font-size:26px;font-weight:750;line-height:1;
 }
 .gain-numpad-done:active{background:var(--gain-accent-light)}
 .gain-numpad button:focus-visible{

@@ -77,3 +77,15 @@ test('keypad contains buttons only and writes directly to its selected field',()
   assert.match(css,/\.set-row \.set-value-button\.is-editing/);
   assert.match(css,/\.shell\.gain-keypad-open main/);
 });
+
+test('Done tick is on the right of the adjustment keys, not beneath the keypad',()=>{
+  const js=fs.readFileSync('app/src/numericKeypad.js','utf8');
+  const css=fs.readFileSync('app/style.css','utf8');
+  assert.match(js,/done\.textContent='✓'/);
+  assert.match(js,/done\.setAttribute\('aria-label','Done'\)/);
+  assert.match(js,/shortcuts\.append\(done\)/);
+  assert.doesNotMatch(js,/<button type="button" class="gain-numpad-done" data-close>Done<\/button>/);
+  assert.match(css,/\.gain-numpad-shortcuts\{\s*display:flex/);
+  assert.match(css,/\.gain-numpad-done\{\s*flex:0 0 44px/);
+  assert.doesNotMatch(css,/\.gain-numpad-done\{[^}]*margin-top/);
+});

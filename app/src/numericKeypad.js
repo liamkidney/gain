@@ -61,8 +61,7 @@ export function installNumericKeypad(root,{onValue}){
   panel.setAttribute('aria-label','Numeric keypad');
   panel.hidden=true;
   panel.innerHTML=`<div class="gain-numpad-shortcuts" aria-label="Quick adjustments"></div>
-    <div class="gain-numpad-grid" aria-label="Numeric keys"></div>
-    <button type="button" class="gain-numpad-done" data-close>Done</button>`;
+    <div class="gain-numpad-grid" aria-label="Numeric keys"></div>`;
   document.body.append(panel);
   const shortcuts=panel.querySelector('.gain-numpad-shortcuts');
   const grid=panel.querySelector('.gain-numpad-grid');
@@ -123,6 +122,14 @@ export function installNumericKeypad(root,{onValue}){
       (step>0?'Increase ':'Decrease ')+(field==='weight'?'weight':'repetitions')+
       ' by '+Math.abs(step)+(field==='weight'?' kilograms':''),
       'gain-numpad-shortcut')));
+    // The Done control lives at the right edge of the adjustment row.
+    const done=document.createElement('button');
+    done.type='button';
+    done.className='gain-numpad-done';
+    done.setAttribute('data-close','');
+    done.setAttribute('aria-label','Done');
+    done.textContent='✓';
+    shortcuts.append(done);
     grid.replaceChildren(...[
       ...'123456789',
       field==='weight'?'decimal':'clear','0','backspace'

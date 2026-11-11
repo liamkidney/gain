@@ -55,6 +55,11 @@ export function applyNumericKey(state,key,field){
 export function keypadScrollDelta(fieldBottom,keypadTop,margin=16){
   return Math.max(0,Math.ceil(fieldBottom-keypadTop+margin));
 }
+/** A deliberate pull or a sufficiently quick downward flick dismisses the keypad. */
+export function shouldDismissKeypadSwipe(distancePx,durationMs){
+  if(!Number.isFinite(distancePx)||distancePx<=0)return false;
+  return distancePx>=92||(distancePx>=42&&durationMs>0&&distancePx/durationMs>=0.45);
+}
 
 export function installNumericKeypad(root,{onValue}){
   const panel=document.createElement('section');
@@ -82,7 +87,19 @@ export function installNumericKeypad(root,{onValue}){
   const shortcuts=panel.querySelector('.gain-numpad-shortcuts');
   const grid=panel.querySelector('.gain-numpad-grid');
   let active=null;
-
+  let pointerGesture=null;
+  let suppressTapUntil=0;
+  let exitTimer=null;
+  let animationToken=0;
+  const prefersReducedMotion=()=>window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function finishExit(token){
+    if(token!==animationToken||active||panel.classList.contains('is-open'))return;
+    clearTimeout(exitTimer);
+    exitTimer=null;
+    panel.hidden=true;
+    panel.classList.remove('is-dragging');
+    panel.style.removeProperty('--gain-drag-y');
+  }
   function keyButton(key,label,aria,klass=''){
     const button=document.createElement('button');
     button.type='button';
@@ -95,8 +112,9 @@ export function installNumericKeypad(root,{onValue}){
   function keepFieldVisible(){
     if(!active||!active.trigger.isConnected||panel.hidden)return;
     const field=active.trigger.getBoundingClientRect();
-    const pad=panel.getBoundingClientRect();
-    const delta=keypadScrollDelta(field.bottom,pad.top);
+    // Ignore the sheet's temporary vertical translation during slide/drag.
+    const anchoredTop=window.innerHeight-panel.offsetHeight;
+    const delta=keypadScrollDelta(field.bottom,anchoredTop);
     if(delta>0)window.scrollBy(0,delta);
   }
   function syncHeight(){
@@ -128,7 +146,7 @@ export function installNumericKeypad(root,{onValue}){
     // The workout cell itself is the display; preserve partial decimals while typing.
     onValue(active.trigger,active.text,numericDraftValue(active.text,active.field));
   }
-  function close({restoreFocus=true}={}){
+  function close({restoreFocus=true,preservePanel=false}={}){
     if(!active)return;
     const {trigger,field,text}=active;
     active=null;
@@ -139,17 +157,29 @@ export function installNumericKeypad(root,{onValue}){
       trigger.classList.remove('is-editing');
       trigger.setAttribute('aria-expanded','false');
     }
-    panel.hidden=true;
-    loading.hidden=true;
-    keyboard.hidden=false;
-    const shell=root.querySelector('.shell');
-    shell?.classList.remove('gain-keypad-open');
-    shell?.style.removeProperty('--gain-keypad-height');
+    if(!preservePanel){
+      loading.hidden=true;
+      keyboard.hidden=false;
+      const shell=root.querySelector('.shell');
+      shell?.classList.remove('gain-keypad-open');
+      shell?.style.removeProperty('--gain-keypad-height');
+      panel.classList.remove('is-dragging','is-open');
+      panel.style.removeProperty('--gain-drag-y');
+      const token=++animationToken;
+      if(prefersReducedMotion())finishExit(token);
+      else exitTimer=setTimeout(()=>finishExit(token),420);
+    }
     if(restoreFocus&&trigger.isConnected)trigger.focus({preventScroll:true});
   }
   function open(trigger,{field,value}){
     if(!VALID_FIELDS.has(field))return;
-    if(active)close({restoreFocus:false});
+    const alreadyOpen=panel.classList.contains('is-open')&&!panel.hidden;
+    if(active)close({restoreFocus:false,preservePanel:true});
+    clearTimeout(exitTimer);
+    exitTimer=null;
+    ++animationToken;
+    panel.classList.remove('is-dragging');
+    panel.style.removeProperty('--gain-drag-y');
     active={
       trigger,field,
       text:value===null||value===undefined?'':String(value),
@@ -197,8 +227,70 @@ export function installNumericKeypad(root,{onValue}){
     trigger.classList.add('is-editing');
     trigger.setAttribute('aria-expanded','true');
     trigger.focus({preventScroll:true});
-    requestAnimationFrame(keepFieldVisible);
+    const token=animationToken;
+    if(alreadyOpen){
+      panel.classList.add('is-open');
+      requestAnimationFrame(keepFieldVisible);
+    }else{
+      // Force the hidden/off-screen state to paint before the sheet slides up.
+      panel.classList.remove('is-open');
+      requestAnimationFrame(()=>{
+        if(token!==animationToken||!active)return;
+        panel.classList.add('is-open');
+        requestAnimationFrame(keepFieldVisible);
+      });
+    }
   }
+  panel.addEventListener('transitionend',event=>{
+    if(event.target===panel&&event.propertyName==='transform'&&!panel.classList.contains('is-open')){
+      finishExit(animationToken);
+    }
+  });
+  panel.addEventListener('pointerdown',event=>{
+    if(!active||!panel.classList.contains('is-open'))return;
+    if(event.pointerType==='mouse'&&event.button!==0)return;
+    pointerGesture={id:event.pointerId,x:event.clientX,y:event.clientY,
+      start:performance.now(),dragging:false,distance:0};
+  });
+  panel.addEventListener('pointermove',event=>{
+    const gesture=pointerGesture;
+    if(!gesture||gesture.id!==event.pointerId)return;
+    const dy=event.clientY-gesture.y;
+    const dx=event.clientX-gesture.x;
+    if(!gesture.dragging){
+      if(dy>10&&dy>Math.abs(dx)*1.25){
+        gesture.dragging=true;
+        panel.classList.add('is-dragging');
+      }else if(dy< -12||Math.abs(dx)>18){
+        pointerGesture=null;
+        return;
+      }else return;
+    }
+    gesture.distance=Math.max(0,dy);
+    panel.style.setProperty('--gain-drag-y',Math.round(gesture.distance)+'px');
+    if(event.cancelable)event.preventDefault();
+  });
+  function releaseSwipe(event,cancelled=false){
+    const gesture=pointerGesture;
+    if(!gesture||gesture.id!==event.pointerId)return;
+    pointerGesture=null;
+    if(!gesture.dragging)return;
+    suppressTapUntil=Date.now()+420;
+    panel.classList.remove('is-dragging');
+    panel.style.removeProperty('--gain-drag-y');
+    if(!cancelled&&shouldDismissKeypadSwipe(gesture.distance,performance.now()-gesture.start)){
+      close({restoreFocus:false});
+    }
+  }
+  panel.addEventListener('pointerup',event=>releaseSwipe(event));
+  panel.addEventListener('pointercancel',event=>releaseSwipe(event,true));
+  panel.addEventListener('click',event=>{
+    if(Date.now()<suppressTapUntil){
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      return;
+    }
+  },true);
   panel.addEventListener('click',event=>{
     const button=event.target.closest('button');
     if(!button)return;

@@ -285,7 +285,10 @@ input::placeholder,textarea::placeholder{color:var(--gain-faint)}
   padding-bottom:calc(var(--gain-keypad-height, 338px) + 24px);
 }
 .gain-numpad{
-  position:fixed;bottom:0;left:50%;transform:translateX(-50%);
+  position:fixed;bottom:0;left:50%;
+  transform:translate3d(-50%,105%,0);
+  transition:transform .30s cubic-bezier(.22,.72,.24,1);
+  will-change:transform;
   z-index:40;width:min(100%,740px);
   max-height:72dvh;overflow-y:auto;
   padding:10px 12px calc(11px + env(safe-area-inset-bottom));
@@ -296,6 +299,12 @@ input::placeholder,textarea::placeholder{color:var(--gain-faint)}
   overscroll-behavior:contain;
 }
 .gain-numpad[hidden]{display:none!important}
+.gain-numpad.is-open{transform:translate3d(-50%,var(--gain-drag-y,0px),0)}
+.gain-numpad.is-dragging{transition:none!important}
+@media(prefers-reduced-motion:reduce){.gain-numpad{transition:none!important}}
+/* Vertical drags on keypad buttons move the whole sheet, not the page. */
+.gain-numpad-keyboard{touch-action:none}
+.gain-bar-header{touch-action:none}
 .gain-numpad-shortcuts{
   display:flex;align-items:stretch;
   gap:7px;margin:0 0 9px;

@@ -110,3 +110,10 @@
 - [x] Explain impossible weights or values below the bar weight rather than guessing a load.
 - [x] Keep the loading guide read-only, with Back to keypad and Done actions; provide tests and offline PWA support.
 - [ ] Verify sizing and interaction on a real iPhone before release.
+
+## Keypad bottom-sheet movement — 11 Nov 2026
+
+- [x] Slide the numeric keypad up from the bottom when opening and down when closing, including Done and tap-away dismissal.
+- [x] Allow a downward drag or quick flick on the keypad to dismiss, with short drags snapping back; prevent unintended digit presses after dragging.
+- [x] Preserve the keypad while switching between weight/reps cells and respect reduced-motion settings.
+- [ ] Check open/close animations and swipe interactions on a physical iPhone.

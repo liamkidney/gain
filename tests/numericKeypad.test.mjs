@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import {applyNumericKey,numericDraftValue,stepNumericValue,keypadScrollDelta} from '../app/src/numericKeypad.js';
+import {applyNumericKey,numericDraftValue,stepNumericValue,keypadScrollDelta,shouldDismissKeypadSwipe} from '../app/src/numericKeypad.js';
 
 const press=(field,initial,keys)=>{
   let state={text:initial,fresh:true};
@@ -93,4 +93,28 @@ test('Done tick is on the right of the adjustment keys, not beneath the keypad',
   assert.match(css,/\.gain-numpad-done\{[^}]*border:0;background:transparent/);
   assert.match(css,/\.gain-numpad-done-face\{[^}]*width:38px;height:38px/);
   assert.doesNotMatch(css,/\.gain-numpad-done\{[^}]*margin-top/);
+});
+
+test('downward swipe threshold and flick threshold ignore upward moves',()=>{
+  assert.equal(shouldDismissKeypadSwipe(100,500),true);
+  assert.equal(shouldDismissKeypadSwipe(48,70),true);
+  assert.equal(shouldDismissKeypadSwipe(35,50),false);
+  assert.equal(shouldDismissKeypadSwipe(65,500),false);
+  assert.equal(shouldDismissKeypadSwipe(-150,80),false);
+  assert.equal(shouldDismissKeypadSwipe(0,80),false);
+});
+test('keypad slides vertically, reverts short pulls and animates dismissal',()=>{
+  const js=fs.readFileSync('app/src/numericKeypad.js','utf8');
+  const css=fs.readFileSync('app/style.css','utf8');
+  assert.match(css,/transform:translate3d\(-50%,105%,0\)/);
+  assert.match(css,/\.gain-numpad\.is-open\{transform:translate3d\(-50%,var\(--gain-drag-y,0px\),0\)\}/);
+  assert.match(css,/\.gain-numpad\.is-dragging\{transition:none!important\}/);
+  assert.match(css,/@media\(prefers-reduced-motion:reduce\)\{\.gain-numpad\{transition:none!important\}\}/);
+  assert.match(js,/panel\.addEventListener\('pointermove'/);
+  assert.match(js,/panel\.addEventListener\('pointercancel'/);
+  assert.match(js,/shouldDismissKeypadSwipe\(gesture\.distance/);
+  assert.match(js,/panel\.classList\.remove\('is-dragging','is-open'\)/);
+  assert.match(js,/preservePanel:true/);
+  assert.match(js,/finishExit\(animationToken\)/);
+  assert.doesNotMatch(js,/panel\.hidden=true;\s+loading\.hidden=true;/);
 });

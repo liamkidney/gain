@@ -3,6 +3,8 @@
  * Set values are buttons, not native number inputs, so iOS never opens its
  * keyboard or the extra previous/next/done accessory bar.
  */
+import {lucideIcon} from './lucide.js';
+
 const VALID_FIELDS=new Set(['weight','reps']);
 
 export function numericDraftValue(text,field){
@@ -128,7 +130,7 @@ export function installNumericKeypad(root,{onValue}){
     done.className='gain-numpad-done';
     done.setAttribute('data-close','');
     done.setAttribute('aria-label','Done');
-    done.textContent='✓';
+    done.innerHTML=`<span class="gain-numpad-done-face">${lucideIcon('check',18)}</span>`;
     shortcuts.append(done);
     grid.replaceChildren(...[
       ...'123456789',

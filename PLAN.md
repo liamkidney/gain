@@ -95,3 +95,9 @@
 
 - [x] Place the Done control at the right of the quick-adjustment row as a copper tick button, removing the full-width bottom button.
 - [ ] Verify compact keypad layout on iPhone before production.
+
+## Done icon refinement — 11 Nov 2026
+
+- [x] Replace the Unicode keypad tick with the vendored Lucide Check icon.
+- [x] Use a 38 × 38 px borderless copper face inside a 44 × 44 px touch target to reduce its visual size without reducing tap accessibility.
+- [ ] Confirm sizing on a physical iPhone.

@@ -81,11 +81,16 @@ test('keypad contains buttons only and writes directly to its selected field',()
 test('Done tick is on the right of the adjustment keys, not beneath the keypad',()=>{
   const js=fs.readFileSync('app/src/numericKeypad.js','utf8');
   const css=fs.readFileSync('app/style.css','utf8');
-  assert.match(js,/done\.textContent='✓'/);
+  const icons=fs.readFileSync('app/src/lucide.js','utf8');
+  assert.match(js,/lucideIcon\('check',18\)/);
+  assert.doesNotMatch(js,/done\.textContent='✓'/);
+  assert.match(icons,/check: '<path d="M20 6 9 17l-5-5"\/>',/);
   assert.match(js,/done\.setAttribute\('aria-label','Done'\)/);
   assert.match(js,/shortcuts\.append\(done\)/);
   assert.doesNotMatch(js,/<button type="button" class="gain-numpad-done" data-close>Done<\/button>/);
   assert.match(css,/\.gain-numpad-shortcuts\{\s*display:flex/);
   assert.match(css,/\.gain-numpad-done\{\s*flex:0 0 44px/);
+  assert.match(css,/\.gain-numpad-done\{[^}]*border:0;background:transparent/);
+  assert.match(css,/\.gain-numpad-done-face\{[^}]*width:38px;height:38px/);
   assert.doesNotMatch(css,/\.gain-numpad-done\{[^}]*margin-top/);
 });

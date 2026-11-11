@@ -43,7 +43,7 @@ Records are stored in IndexedDB (`gain-dev-v1` or `gain-prod-v1`) with logical c
 - **Templates:** reusable exercise and set structures, opened in the same editor.
 - **Analytics:** exercise history and charts from non-archived, logged sets.
 - All changes save locally without an explicit Finish or Done action.
-- Colours use a restrained graphite, slate-blue and cool-white palette.
+- Colours use a dark graphite, steel, chalk and copper palette; charts and exercise illustrations follow the same theme. Development and production icons stay blue and red, respectively.
 
 ## Structure
 

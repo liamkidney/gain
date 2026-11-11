@@ -49,3 +49,9 @@
 - [x] Remove the three-dot action from history rows; swipe left remains the mechanism for Repeat / Archive.
 - [x] Opening a workout slides its screen in from the right (~360 ms); Back slides it out to the right to reveal the prior page.
 - [ ] Confirm the transitions and swipe behaviour on an actual iPhone.
+
+## Branding — 11 Nov 2026
+
+- [x] Apply Graphite & Copper across the UI, charts, exercise diagrams and installed-app chrome on `dev`.
+- [x] Keep the existing blue dev and red production app icons.
+- [ ] Check the new dark theme on a real iPhone before promotion.

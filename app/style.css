@@ -124,3 +124,98 @@ body{background:#f0f2f3}
 @media(prefers-reduced-motion:reduce){.page-motion>.page-enter,.page-motion>.page-exit{animation:none}.inbox-slide{transition:none}}
 @media(min-width:600px){.set-head,.set-row{grid-template-columns:42px minmax(110px,1fr) 100px 100px 50px}}
 @media(max-width:360px){.editor-identity{grid-template-columns:minmax(0,1fr) 130px}.set-head,.set-row{grid-template-columns:27px minmax(57px,1.1fr) minmax(44px,.85fr) minmax(44px,.85fr) 36px;gap:4px}.inbox-item{gap:9px}}
+
+/* Brand theme: Graphite & Copper. All UI surfaces use semantic dark tokens. */
+:root {
+  --gain-bg:#151819;
+  --gain-surface:#1e2324;
+  --gain-raised:#282d2f;
+  --gain-text:#f2f0e9;
+  --gain-muted:#adb5b1;
+  --gain-faint:#969f9b;
+  --gain-divider:#3c4443;
+  --gain-accent:#d77850;
+  --gain-accent-light:#e4916f;
+  --gain-danger:#ed9293;
+  color:var(--gain-text);
+  background:var(--gain-bg);
+  color-scheme:dark;
+}
+html,body{background:var(--gain-bg)}
+.shell{background:var(--gain-bg);box-shadow:none}
+.topbar{background:rgba(21,24,25,.97);border-bottom-color:var(--gain-divider)}
+.topbar h1,.hero-row h2,.section-heading h3,.empty-state h3,
+.inbox-line strong,.exercise-title strong,.info-screen h2,.info-screen h3{color:var(--gain-text)}
+.topbar-repeat,.eyebrow,.history-toggle{color:var(--gain-accent-light)!important}
+.screen>h2,.screen>h3{color:var(--gain-text)}
+.muted,.subtle,.helper,.empty-state,.archive-explanation,.metrics-inline,
+.save-indicator,.workout-meta{color:var(--gain-muted)}
+.field-label,.filters label,.set-head,.set-number span,.previous-cell,
+.exercise-title span,.inbox-line.secondary,.inbox-line time,.chart-title span,
+.chart-axis,.stat-row span,.notes summary,.exercise-options summary,
+.picker-select small,.empty-chart{color:var(--gain-muted)}
+.btn.primary{background:var(--gain-accent);color:var(--gain-bg)}
+.btn.primary:active{background:var(--gain-accent-light)}
+.btn.outline{background:var(--gain-raised);border-color:var(--gain-divider);color:var(--gain-text)}
+.text-action,.quiet-link,.add-set,.view-history,.custom-add,.info-screen .quiet-link{color:var(--gain-accent-light)}
+.quiet-link.danger,.danger,.workout-actions .quiet-link.danger{color:var(--gain-danger)!important}
+.icon-button,.small-icon{color:var(--gain-muted)}
+.icon-button:active,.small-icon:active{background:var(--gain-raised)}
+.bottom-nav{background:rgba(21,24,25,.97);border-top-color:var(--gain-divider)}
+.nav-item{color:var(--gain-faint)}
+.nav-item.active{color:var(--gain-accent-light)}
+.inbox,.inbox-swipe,.picker-item,.settings-row{border-color:var(--gain-divider)}
+.inbox-slide,.inbox-item,.picker-select,.analytics-history-row{
+  background:var(--gain-bg);color:var(--gain-text)
+}
+.inbox-item:active,.picker-select:active{background:var(--gain-surface)}
+.inbox-item>svg{color:var(--gain-faint)}
+.date-circle,.template-badge{background:var(--gain-raised);color:var(--gain-accent-light)}
+.swipe-repeat{background:#915039}
+.swipe-archive{background:#3d4746}
+.swipe-actions button{color:#fff}
+.template-card,.exercise-summary,.chart-card,.stat-row div{
+  background:var(--gain-surface);border-color:var(--gain-divider);color:var(--gain-text)
+}
+.template-badge,.pill,.tags span{background:var(--gain-raised);color:var(--gain-accent-light)}
+.summary-head img,.exercise-top img,.picker-select img{background:var(--gain-raised)}
+.summary-sets .pill{color:var(--gain-text)}
+.name-input{background:transparent;color:var(--gain-text)}
+.name-input:focus{border-bottom-color:var(--gain-accent)}
+.date-input,.analytics-select,.filters select,.search-box,.set-row input,.notes textarea{
+  background:var(--gain-raised);border-color:var(--gain-divider);color:var(--gain-text)
+}
+input,textarea,select{color:var(--gain-text);caret-color:var(--gain-accent-light)}
+input::placeholder,textarea::placeholder{color:var(--gain-faint)}
+.search-box input{color:var(--gain-text)}
+.search-box svg{color:var(--gain-muted)}
+.editor-exercise,.workout-actions,.workout-meta,.notes{border-color:var(--gain-divider)}
+.set-row.completed{background:transparent}
+.set-row input{border-color:transparent}
+.set-row input:focus{background:#303638;outline:2px solid var(--gain-accent);border-color:var(--gain-accent)}
+.remove-set,.move-set-up{color:var(--gain-muted)}
+.done-check{background:var(--gain-raised);border-color:#7b8581;color:var(--gain-text)}
+.done-check.checked{background:var(--gain-accent);border-color:var(--gain-accent);color:var(--gain-bg)}
+.exercise-options-menu{background:var(--gain-raised);border-color:var(--gain-divider);box-shadow:0 8px 22px #0008}
+.exercise-options-menu button{background:var(--gain-raised);color:var(--gain-text)}
+.exercise-options-menu button:active{background:#353d3c}
+.add-exercise{border-color:#6a7470!important}
+.picker-select svg{color:var(--gain-accent-light)}
+.guide-illustration{background:var(--gain-surface)}
+.stat-row strong{color:var(--gain-accent-light)}
+.metric-tabs{background:var(--gain-raised)}
+.metric-tabs button,.chart-time button{color:var(--gain-muted)}
+.metric-tabs button.active{background:#3b4141;color:var(--gain-text);box-shadow:none}
+.chart-time button.active{background:var(--gain-raised);color:var(--gain-accent-light)}
+.chart-point:focus{stroke:var(--gain-text)}
+.chart-point-info{background:var(--gain-raised);color:var(--gain-text)}
+.chart-point-info span{color:var(--gain-muted)}
+.analytics-history-row{border-color:var(--gain-divider)}
+.warning-box{background:#332920}
+.warning-box strong{color:#f1bd90}
+.warning-box p{color:#dec4ac}
+.toast{background:var(--gain-raised);color:var(--gain-text);box-shadow:0 5px 22px #0008}
+.page-motion>.page-enter,.page-motion>.page-exit{background:var(--gain-bg)}
+:where(button,a,input,textarea,select,summary):focus-visible{
+  outline:2px solid var(--gain-accent-light);outline-offset:2px
+}

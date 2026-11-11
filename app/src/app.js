@@ -4,6 +4,7 @@ import {newId,todayLocal,now,newSet,newEntry,createWorkout,createTemplate,repeat
 import {makeChart,since} from './charts.js';
 import {lucideIcon} from './lucide.js';
 import {installBackSwipe} from './backSwipe.js';
+import {installNumericToolbar} from './keyboardToolbar.js';
 
 const BUILD=window.GAIN_BUILD||{channel:'dev',revision:'local',base:'/gain/dev/'};
 const root=document.querySelector('#app');
@@ -33,12 +34,25 @@ function templateWorkout(id){const t=db.templates.find(x=>x.id===id);if(!t)retur
 function newTemplate(){const t=createTemplate();db.templates.push(t);enqueue('templates',t);openRecord('templates',t.id,'editor');}
 function showPicker(){ui.pickerReturn='editor';ui.view='picker';ui.pickerSearch='';ui.pickerMuscle='All';ui.pickerEquipment='All';render(true);}
 function selectExercise(id){const record=current();if(!record)return;const prev=ui.recordType==='workouts'?lastCompletedSets(db.workouts,id,record.date,record.id):[];const sets=prev.length?prev.map(s=>newSet(s.weight,s.reps)):Array.from({length:3},()=>newSet());record.exercises.push(newEntry(id,sets));enqueue(ui.recordType,record);ui.view='editor';render(true);toast('Exercise added');}
-function editInput(id,value,entryIdx,setIdx){mutate(record=>{if(id==='name')record.name=value.trim()||'Workout';if(id==='date'&&/^\d{4}-\d{2}-\d{2}$/.test(value))record.date=value;if(id==='notes'&&record.exercises[entryIdx])record.exercises[entryIdx].notes=value;if(['weight','reps'].includes(id)){const set=record.exercises[entryIdx]?.sets[setIdx];if(set)set[id]=finiteOrNull(value);}});}
+function persistNumericInput(input,value=input.value){
+  const field=input.dataset.edit;
+  if(field!=='weight'&&field!=='reps')return;
+  const entryIndex=Number(input.dataset.entry),setIndex=Number(input.dataset.set);
+  const record=current(),set=record?.exercises[entryIndex]?.sets[setIndex];
+  if(!set)return;
+  const parsed=finiteOrNull(value);
+  // Keep the native input focused while writing: rerendering destroys the keyboard.
+  if(Object.is(set[field],parsed))return;
+  set[field]=parsed;
+  enqueue(ui.recordType,record);
+}
+function editInput(id,value,entryIdx,setIdx){mutate(record=>{if(id==='name')record.name=value.trim()||'Workout';if(id==='date'&&/^\d{4}-\d{2}-\d{2}$/.test(value))record.date=value;if(id==='notes'&&record.exercises[entryIdx])record.exercises[entryIdx].notes=value;});}
 function formatWeight(s){return `${formatNumber(s.weight)} kg × ${formatNumber(s.reps)}`;}
 function titleBar(title,{back=false,settings=false,action=''}={}){return `<header class="topbar"><div class="topbar-title">${back?`<button class="icon-button back" data-action="back" aria-label="Back">${ico('back')}</button>`:''}<h1>${esc(title)}</h1></div><div class="topbar-actions">${action}${settings?`<button class="icon-button" data-action="settings" aria-label="Settings">${lucideIcon('settings',22)}</button>`:''}</div></header>`;}
 function footer(){return `<nav class="bottom-nav" aria-label="Main navigation">${[['workouts','Workouts','list'],['templates','Templates','clipboard-list'],['analytics','Analytics','chart-no-axes-combined']].map(([id,label,icon])=>`<button data-action="nav" data-id="${id}" class="nav-item ${ui.tab===id?'active':''}">${lucideIcon(icon,22)}<span>${label}</span></button>`).join('')}</nav>`;}
 function layout(content,top){
   const previous=window.scrollY;
+  numericToolbar?.sync();
   const transition=ui.transition;ui.transition='';
   const oldMain=root.querySelector('.shell > main');
   const animate=oldMain&&(transition==='push'||transition==='pop')&&!window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -49,6 +63,7 @@ function layout(content,top){
       <main class="${transition==='push'?'page-enter':'page-exit'}" ${transition==='pop'?'inert aria-hidden="true"':''}>${transition==='push'?content:oldContent}</main>
     </div>`:`<main>${content}</main>`;
   root.innerHTML=`<div class="shell">${page}${footer()}<div id="gain-toast" class="toast" ${ui.toast?'':'hidden'}>${esc(ui.toast)}</div></div>`;
+  numericToolbar?.sync();
   if(animate){
     const wrapper=root.querySelector('.page-motion');
     const moving=wrapper.querySelector(transition==='push'?'.page-enter':'.page-exit');
@@ -176,6 +191,7 @@ function completeSwipe(e){const s=swipeStart;if(!s||s.id!==e.pointerId)return;sw
 }
 root.addEventListener('pointerup',completeSwipe);
 root.addEventListener('pointercancel',e=>{const s=swipeStart;if(!s)return;swipeStart=null;s.row.querySelector('.inbox-slide')?.style.removeProperty('transform');s.row.classList.remove('swiping');});
+const numericToolbar=installNumericToolbar(root,{onStep:(input,value)=>persistNumericInput(input,value)});
 const backGesture=installBackSwipe(root,{
   canStart:()=>ui.view==='editor'||ui.view==='detail',
   homeMarkup:()=>ui.tab==='workouts'?homeWorkouts():ui.tab==='templates'?homeTemplates():homeAnalytics(),
@@ -219,7 +235,7 @@ case 'import':document.querySelector('#backup-file')?.click();break;
 }}
 root.addEventListener('click',e=>{if(backGesture.shouldSuppressClick()){e.preventDefault();e.stopPropagation();return;}if(suppressSwipeClick&&e.target.closest('.inbox-slide')){e.preventDefault();e.stopPropagation();suppressSwipeClick=false;return;}const point=e.target.closest('.chart-point');if(point){ui.point=point.dataset.id;render();return;}const target=e.target.closest('[data-action]');if(!target||target.disabled)return;handleAction(target).catch(err=>{console.error(err);toast('Something went wrong: '+err.message);});});
 root.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target.matches('.chart-point')){e.preventDefault();ui.point=e.target.dataset.id;render();}});
-root.addEventListener('change',e=>{const el=e.target;if(el.dataset.edit){editInput(el.dataset.edit,el.value,Number(el.dataset.entry),Number(el.dataset.set));return;}if(el.id==='filter-muscle'){ui.pickerMuscle=el.value;document.querySelector('#picker-results').innerHTML=renderPickerList();}if(el.id==='filter-equipment'){ui.pickerEquipment=el.value;document.querySelector('#picker-results').innerHTML=renderPickerList();}if(el.id==='analytics-exercise'){ui.analyticsExercise=el.value;ui.point=null;render();}if(el.id==='backup-file'&&el.files?.[0])importData(el.files[0]);});
+root.addEventListener('change',e=>{const el=e.target;if(el.dataset.edit){if(el.dataset.edit==='weight'||el.dataset.edit==='reps')persistNumericInput(el);else editInput(el.dataset.edit,el.value,Number(el.dataset.entry),Number(el.dataset.set));return;}if(el.id==='filter-muscle'){ui.pickerMuscle=el.value;document.querySelector('#picker-results').innerHTML=renderPickerList();}if(el.id==='filter-equipment'){ui.pickerEquipment=el.value;document.querySelector('#picker-results').innerHTML=renderPickerList();}if(el.id==='analytics-exercise'){ui.analyticsExercise=el.value;ui.point=null;render();}if(el.id==='backup-file'&&el.files?.[0])importData(el.files[0]);});
 root.addEventListener('input',e=>{if(e.target.id==='exercise-search'){ui.pickerSearch=e.target.value;document.querySelector('#picker-results').innerHTML=renderPickerList();}});
 async function init(){try{for(const key of ['workouts','templates','customExercises'])db[key]=await store.all(key);root.innerHTML='';render(true);if('serviceWorker' in navigator && (location.protocol==='https:'||location.hostname==='localhost')){try{const reg=await navigator.serviceWorker.register(`./sw.js?v=${BUILD.revision}`,{scope:'./',updateViaCache:'none'});let hadController=!!navigator.serviceWorker.controller;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(hadController)location.reload();hadController=true;});document.addEventListener('visibilitychange',()=>{if(!document.hidden)reg.update().catch(()=>{});});window.addEventListener('pageshow',()=>reg.update().catch(()=>{}));}catch(err){console.warn('Service worker unavailable',err);}}}catch(err){root.innerHTML=`<div class="fatal"><h1>Gain could not open local storage</h1><p>${esc(err.message)}</p><p>Check that private browsing is disabled and browser storage is available.</p></div>`;}}
 init();

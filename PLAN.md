@@ -63,3 +63,9 @@
 - [x] Remove the redundant History heading and the Archived counter.
 - [x] Enable a rightward edge-swipe to return from an open workout, with the previous page revealed underneath.
 - [ ] Test the gesture and visual alignment on a physical iPhone before production release.
+
+## Keyboard and navigation — 11 Nov 2026
+
+- [x] Add a native-keyboard accessory toolbar for weight (−5, −2.5, +2.5, +5 kg) and reps (−1, +1), plus Done; preserve focus while shortcuts update and save values.
+- [x] Isolate entire incoming/outgoing pages so history dividers and headers cannot overpaint the animated workout screen, including swipe back.
+- [ ] Verify keyboard toolbar placement and transition behaviour in an installed iPhone PWA.

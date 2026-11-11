@@ -236,3 +236,81 @@ input::placeholder,textarea::placeholder{color:var(--gain-faint)}
 .workout-screen{touch-action:pan-y}
 @media(max-width:360px){.workouts-home .inbox-swipe::before{left:61px}}
 @media(prefers-reduced-motion:reduce){.swipe-back-front{transition:none!important}}
+
+/* Navigation: every screen is an isolated stacking context.
+   Sticky headers and inbox divider pseudo-elements cannot paint above
+   an incoming screen, so they slide away together with their own page. */
+.page-motion>.page-underlay,
+.page-motion>.page-target{
+  position:relative;
+  z-index:0;
+  isolation:isolate;
+}
+.page-motion>.page-enter,
+.page-motion>.page-exit{
+  z-index:2;
+  isolation:isolate;
+}
+.swipe-back-underlay{
+  z-index:0;
+  isolation:isolate;
+}
+.swipe-back-front{
+  z-index:2;
+  isolation:isolate;
+}
+
+/* Native numeric keyboard remains in use; these shortcuts float just above it. */
+.numeric-toolbar{
+  position:fixed;
+  left:50%;
+  transform:translateX(-50%);
+  bottom:0;
+  z-index:30;
+  width:min(100%,740px);
+  min-height:55px;
+  display:flex;
+  align-items:center;
+  gap:7px;
+  padding:7px 10px;
+  border-top:1px solid var(--gain-divider);
+  background:var(--gain-surface);
+  box-shadow:0 -4px 18px #0005;
+  touch-action:manipulation;
+}
+.numeric-toolbar[hidden]{display:none}
+.numeric-toolbar-label{
+  flex:0 0 auto;
+  min-width:34px;
+  font-size:12px;
+  font-weight:700;
+  color:var(--gain-muted);
+}
+.numeric-toolbar-step,
+.numeric-toolbar-done{
+  min-height:42px;
+  border:1px solid var(--gain-divider);
+  border-radius:9px;
+  background:var(--gain-raised);
+  color:var(--gain-text);
+  font-size:14px;
+  font-weight:700;
+  padding:8px 5px;
+  flex:1 1 0;
+  font-variant-numeric:tabular-nums;
+}
+.numeric-toolbar-step:active{background:#414647}
+.numeric-toolbar-done{
+  flex:0 0 auto;
+  min-width:55px;
+  border-color:transparent;
+  background:var(--gain-accent);
+  color:var(--gain-bg);
+}
+.numeric-toolbar-done:active{background:var(--gain-accent-light)}
+@media(max-width:360px){
+  .numeric-toolbar{gap:4px;padding:6px 5px}
+  .numeric-toolbar-label{min-width:27px}
+  .numeric-toolbar-step{font-size:13px}
+  .numeric-toolbar-done{min-width:48px}
+}

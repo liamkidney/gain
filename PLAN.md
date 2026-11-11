@@ -55,3 +55,11 @@
 - [x] Apply Graphite & Copper across the UI, charts, exercise diagrams and installed-app chrome on `dev`.
 - [x] Keep the existing blue dev and red production app icons.
 - [ ] Check the new dark theme on a real iPhone before promotion.
+
+## Inbox and navigation refinements — 11 Nov 2026
+
+- [x] Use locally vendored, licensed Lucide icons for Workouts, Templates, Analytics and Settings.
+- [x] Inbox dividers begin after the circular dates, including the divider above the first entry.
+- [x] Remove the redundant History heading and the Archived counter.
+- [x] Enable a rightward edge-swipe to return from an open workout, with the previous page revealed underneath.
+- [ ] Test the gesture and visual alignment on a physical iPhone before production release.

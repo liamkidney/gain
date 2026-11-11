@@ -219,3 +219,20 @@ input::placeholder,textarea::placeholder{color:var(--gain-faint)}
 :where(button,a,input,textarea,select,summary):focus-visible{
   outline:2px solid var(--gain-accent-light);outline-offset:2px
 }
+
+/* 11 Nov: inbox separators align with the message text, not the date circles. */
+.workouts-home .inbox{border-top:0}
+.workouts-home .inbox-swipe{border-bottom:0}
+.workouts-home .inbox-swipe::before{
+  content:"";position:absolute;left:72px;right:0;top:0;
+  border-top:1px solid var(--gain-divider,#3c4443);z-index:3;pointer-events:none;
+}
+.workouts-home .history-actions{justify-content:flex-end;margin-bottom:13px}
+.workouts-home .history-actions:has(h3){justify-content:space-between}
+/* The swipe-back underlay is the preceding page; the workout tracks the finger. */
+.shell{position:relative}
+.swipe-back-underlay{position:absolute;left:0;width:100%;min-height:100%;pointer-events:none;background:var(--gain-bg,#fcfcfb)}
+.swipe-back-front{position:relative;z-index:2;will-change:transform;background:var(--gain-bg,#fcfcfb);box-shadow:-8px 0 22px #0004;touch-action:pan-y}
+.workout-screen{touch-action:pan-y}
+@media(max-width:360px){.workouts-home .inbox-swipe::before{left:61px}}
+@media(prefers-reduced-motion:reduce){.swipe-back-front{transition:none!important}}

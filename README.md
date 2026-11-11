@@ -42,7 +42,7 @@ Records are stored in IndexedDB (`gain-dev-v1` or `gain-prod-v1`) with logical c
 - **Workouts:** date-circle inbox with divider above the first item. Tap to open an immediately editable workout; it enters from the left. Swipe left for Repeat / Archive, and use Archived to restore.
 - **Templates:** reusable exercise and set structures, opened in the same editor.
 - **Analytics:** exercise history and charts from non-archived, logged sets.
-- All changes save locally without an explicit Finish or Done action.
+- All workout changes save locally. Weight and repetition cells open Gain's own numeric keypad rather than the iOS keyboard (Done only dismisses the keypad).
 - Colours use a dark graphite, steel, chalk and copper palette; charts and exercise illustrations follow the same theme. Development and production icons stay blue and red, respectively.
 
 ## Structure
@@ -52,6 +52,7 @@ Records are stored in IndexedDB (`gain-dev-v1` or `gain-prod-v1`) with logical c
 - `app/src/catalog.js` — curated static exercise catalogue
 - `app/src/charts.js` — responsive SVG performance charts
 - `app/src/app.js` — shared workout/template editor and screens
+- `app/src/numericKeypad.js` — custom weight and reps keypad, including quick adjustments
 - `app/assets/exercises/` — original exercise movement illustrations
 - `scripts/build-pages.mjs` — channel and revision-aware build
 - `app/sw.js` — network-first PWA cache scoped per channel

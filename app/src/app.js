@@ -4,7 +4,7 @@ import {newId,todayLocal,now,newSet,newEntry,createWorkout,createTemplate,repeat
 import {makeChart,since} from './charts.js';
 import {lucideIcon} from './lucide.js';
 import {installBackSwipe} from './backSwipe.js';
-import {installNumericToolbar} from './keyboardToolbar.js';
+import {installNumericKeypad} from './numericKeypad.js';
 
 const BUILD=window.GAIN_BUILD||{channel:'dev',revision:'local',base:'/gain/dev/'};
 const root=document.querySelector('#app');
@@ -34,14 +34,19 @@ function templateWorkout(id){const t=db.templates.find(x=>x.id===id);if(!t)retur
 function newTemplate(){const t=createTemplate();db.templates.push(t);enqueue('templates',t);openRecord('templates',t.id,'editor');}
 function showPicker(){ui.pickerReturn='editor';ui.view='picker';ui.pickerSearch='';ui.pickerMuscle='All';ui.pickerEquipment='All';render(true);}
 function selectExercise(id){const record=current();if(!record)return;const prev=ui.recordType==='workouts'?lastCompletedSets(db.workouts,id,record.date,record.id):[];const sets=prev.length?prev.map(s=>newSet(s.weight,s.reps)):Array.from({length:3},()=>newSet());record.exercises.push(newEntry(id,sets));enqueue(ui.recordType,record);ui.view='editor';render(true);toast('Exercise added');}
-function persistNumericInput(input,value=input.value){
-  const field=input.dataset.edit;
+function persistNumericButton(button,value){
+  const field=button.dataset.field;
   if(field!=='weight'&&field!=='reps')return;
-  const entryIndex=Number(input.dataset.entry),setIndex=Number(input.dataset.set);
+  const entryIndex=Number(button.dataset.entry),setIndex=Number(button.dataset.set);
   const record=current(),set=record?.exercises[entryIndex]?.sets[setIndex];
   if(!set)return;
   const parsed=finiteOrNull(value);
-  // Keep the native input focused while writing: rerendering destroys the keyboard.
+  if(field==='reps'&&parsed!==null&&!Number.isInteger(parsed))return;
+  // Update only this cell: the keypad stays open while changes auto-save.
+  button.textContent=parsed===null?'–':formatNumber(parsed);
+  button.classList.toggle('is-empty',parsed===null);
+  button.setAttribute('aria-label',
+    `Set ${setIndex+1} ${field==='weight'?'weight in kilograms':'repetitions'}, ${parsed===null?'empty':parsed}`);
   if(Object.is(set[field],parsed))return;
   set[field]=parsed;
   enqueue(ui.recordType,record);
@@ -52,7 +57,7 @@ function titleBar(title,{back=false,settings=false,action=''}={}){return `<heade
 function footer(){return `<nav class="bottom-nav" aria-label="Main navigation">${[['workouts','Workouts','list'],['templates','Templates','clipboard-list'],['analytics','Analytics','chart-no-axes-combined']].map(([id,label,icon])=>`<button data-action="nav" data-id="${id}" class="nav-item ${ui.tab===id?'active':''}">${lucideIcon(icon,22)}<span>${label}</span></button>`).join('')}</nav>`;}
 function layout(content,top){
   const previous=window.scrollY;
-  numericToolbar?.sync();
+  numericKeypad?.close({restoreFocus:false});
   const transition=ui.transition;ui.transition='';
   const oldMain=root.querySelector('.shell > main');
   const animate=oldMain&&(transition==='push'||transition==='pop')&&!window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -63,7 +68,6 @@ function layout(content,top){
       <main class="${transition==='push'?'page-enter':'page-exit'}" ${transition==='pop'?'inert aria-hidden="true"':''}>${transition==='push'?content:oldContent}</main>
     </div>`:`<main>${content}</main>`;
   root.innerHTML=`<div class="shell">${page}${footer()}<div id="gain-toast" class="toast" ${ui.toast?'':'hidden'}>${esc(ui.toast)}</div></div>`;
-  numericToolbar?.sync();
   if(animate){
     const wrapper=root.querySelector('.page-motion');
     const moving=wrapper.querySelector(transition==='push'?'.page-enter':'.page-exit');
@@ -137,8 +141,8 @@ function editorExercise(entry,i,template,record){
         return `<div class="set-row ${s.completed?'completed':''}">
           <div class="set-number"><span>${j+1}</span><button class="remove-set" data-action="remove-set" data-entry="${i}" data-set="${j}" aria-label="Remove set ${j+1}">×</button></div>
           ${template?'':`<div class="previous-cell">${old?`${formatNumber(old.weight)} × ${formatNumber(old.reps)}`:'–'}</div>`}
-          <input aria-label="Set ${j+1} weight in kilograms" inputmode="decimal" type="number" min="0" step="any" data-edit="weight" data-entry="${i}" data-set="${j}" value="${s.weight===null?'':esc(s.weight)}" placeholder="–">
-          <input aria-label="Set ${j+1} repetitions" inputmode="numeric" type="number" min="0" step="1" data-edit="reps" data-entry="${i}" data-set="${j}" value="${s.reps===null?'':esc(s.reps)}" placeholder="–">
+          <button type="button" class="set-value-button ${s.weight===null?'is-empty':''}" data-action="edit-set-value" data-field="weight" data-entry="${i}" data-set="${j}" aria-haspopup="dialog" aria-label="Set ${j+1} weight in kilograms, ${s.weight===null?'empty':s.weight}">${s.weight===null?'–':formatNumber(s.weight)}</button>
+          <button type="button" class="set-value-button ${s.reps===null?'is-empty':''}" data-action="edit-set-value" data-field="reps" data-entry="${i}" data-set="${j}" aria-haspopup="dialog" aria-label="Set ${j+1} repetitions, ${s.reps===null?'empty':s.reps}">${s.reps===null?'–':formatNumber(s.reps)}</button>
           ${template?'':`<button data-action="toggle-set" data-entry="${i}" data-set="${j}" class="done-check ${s.completed?'checked':''}" aria-label="${s.completed?'Unlog':'Log'} set ${j+1}" aria-pressed="${Boolean(s.completed)}">${s.completed?ico('check',17):''}</button>`}
         </div>`;
       }).join('')}
@@ -191,7 +195,7 @@ function completeSwipe(e){const s=swipeStart;if(!s||s.id!==e.pointerId)return;sw
 }
 root.addEventListener('pointerup',completeSwipe);
 root.addEventListener('pointercancel',e=>{const s=swipeStart;if(!s)return;swipeStart=null;s.row.querySelector('.inbox-slide')?.style.removeProperty('transform');s.row.classList.remove('swiping');});
-const numericToolbar=installNumericToolbar(root,{onStep:(input,value)=>persistNumericInput(input,value)});
+const numericKeypad=installNumericKeypad(root,{onValue:(button,value)=>persistNumericButton(button,value)});
 const backGesture=installBackSwipe(root,{
   canStart:()=>ui.view==='editor'||ui.view==='detail',
   homeMarkup:()=>ui.tab==='workouts'?homeWorkouts():ui.tab==='templates'?homeTemplates():homeAnalytics(),
@@ -220,6 +224,13 @@ case 'custom-exercise':await customExercise();break;
 case 'exercise-info':ui.infoExercise=id;ui.infoReturn=ui.view;ui.view='info';render(true);break;
 case 'use-from-info':selectExercise(ui.infoExercise);break;
 case 'exercise-chart':ui.analyticsExercise=id;ui.tab='analytics';ui.view='home';ui.point=null;render(true);break;
+case 'edit-set-value':{
+  const entry=current()?.exercises[entryIndex],set=entry?.sets[setIndex];
+  const field=target.dataset.field;
+  if(set&&(field==='weight'||field==='reps'))
+    numericKeypad.open(target,{field,value:set[field],description:`${exercise(entry.exerciseId).name} · Set ${setIndex+1}`});
+  break;
+}
 case 'toggle-set':{const s=current()?.exercises[entryIndex]?.sets[setIndex];if(s&&!s.completed&&(s.weight===null&&s.reps===null)){toast('Enter the weight or reps first.');break;}mutate(r=>{const set=r.exercises[entryIndex]?.sets[setIndex];if(set)set.completed=!set.completed;});break;}
 case 'add-set':mutate(r=>{const sets=r.exercises[entryIndex]?.sets;if(sets){const last=sets.at(-1);sets.push(newSet(last?.weight??null,last?.reps??null));}});break;
 case 'remove-set':mutate(r=>{r.exercises[entryIndex]?.sets.splice(setIndex,1);});break;
@@ -235,7 +246,7 @@ case 'import':document.querySelector('#backup-file')?.click();break;
 }}
 root.addEventListener('click',e=>{if(backGesture.shouldSuppressClick()){e.preventDefault();e.stopPropagation();return;}if(suppressSwipeClick&&e.target.closest('.inbox-slide')){e.preventDefault();e.stopPropagation();suppressSwipeClick=false;return;}const point=e.target.closest('.chart-point');if(point){ui.point=point.dataset.id;render();return;}const target=e.target.closest('[data-action]');if(!target||target.disabled)return;handleAction(target).catch(err=>{console.error(err);toast('Something went wrong: '+err.message);});});
 root.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target.matches('.chart-point')){e.preventDefault();ui.point=e.target.dataset.id;render();}});
-root.addEventListener('change',e=>{const el=e.target;if(el.dataset.edit){if(el.dataset.edit==='weight'||el.dataset.edit==='reps')persistNumericInput(el);else editInput(el.dataset.edit,el.value,Number(el.dataset.entry),Number(el.dataset.set));return;}if(el.id==='filter-muscle'){ui.pickerMuscle=el.value;document.querySelector('#picker-results').innerHTML=renderPickerList();}if(el.id==='filter-equipment'){ui.pickerEquipment=el.value;document.querySelector('#picker-results').innerHTML=renderPickerList();}if(el.id==='analytics-exercise'){ui.analyticsExercise=el.value;ui.point=null;render();}if(el.id==='backup-file'&&el.files?.[0])importData(el.files[0]);});
+root.addEventListener('change',e=>{const el=e.target;if(el.dataset.edit){editInput(el.dataset.edit,el.value,Number(el.dataset.entry),Number(el.dataset.set));return;}if(el.id==='filter-muscle'){ui.pickerMuscle=el.value;document.querySelector('#picker-results').innerHTML=renderPickerList();}if(el.id==='filter-equipment'){ui.pickerEquipment=el.value;document.querySelector('#picker-results').innerHTML=renderPickerList();}if(el.id==='analytics-exercise'){ui.analyticsExercise=el.value;ui.point=null;render();}if(el.id==='backup-file'&&el.files?.[0])importData(el.files[0]);});
 root.addEventListener('input',e=>{if(e.target.id==='exercise-search'){ui.pickerSearch=e.target.value;document.querySelector('#picker-results').innerHTML=renderPickerList();}});
 async function init(){try{for(const key of ['workouts','templates','customExercises'])db[key]=await store.all(key);root.innerHTML='';render(true);if('serviceWorker' in navigator && (location.protocol==='https:'||location.hostname==='localhost')){try{const reg=await navigator.serviceWorker.register(`./sw.js?v=${BUILD.revision}`,{scope:'./',updateViaCache:'none'});let hadController=!!navigator.serviceWorker.controller;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(hadController)location.reload();hadController=true;});document.addEventListener('visibilitychange',()=>{if(!document.hidden)reg.update().catch(()=>{});});window.addEventListener('pageshow',()=>reg.update().catch(()=>{}));}catch(err){console.warn('Service worker unavailable',err);}}}catch(err){root.innerHTML=`<div class="fatal"><h1>Gain could not open local storage</h1><p>${esc(err.message)}</p><p>Check that private browsing is disabled and browser storage is available.</p></div>`;}}
 init();

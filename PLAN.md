@@ -75,3 +75,10 @@
 - [x] Fix the numeric shortcut toolbar being covered by iOS's native keyboard by positioning from the visible viewport in document coordinates rather than using `position: fixed` and a bottom inset.
 - [x] Recalculate on visual viewport and page scroll, including a delayed pass while the iOS keyboard opens.
 - [ ] Confirm toolbar sits immediately above the keyboard in installed Gain Dev on a physical iPhone.
+
+## Custom numeric keypad — 11 Nov 2026
+
+- [x] Replace native number inputs and the temporary numeric toolbar with a single in-app keypad for weights and reps; native iOS keyboard and its accessory bar do not appear for those fields.
+- [x] Weight quick adjustments: −5, −2.5, +2.5, +5 kg. Rep quick adjustments: −1, +1. Support decimal weights, backspace, clear, Done, external keyboards and focus trapping.
+- [x] Keep autosaving every edit without rerendering the workout; cache the keypad for offline PWA use.
+- [ ] Test the keypad's layout, scrolling, tap targets and accessibility on a physical iPhone before promoting.

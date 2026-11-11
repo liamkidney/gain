@@ -118,3 +118,11 @@ test('keypad slides vertically, reverts short pulls and animates dismissal',()=>
   assert.match(js,/finishExit\(animationToken\)/);
   assert.doesNotMatch(js,/panel\.hidden=true;\s+loading\.hidden=true;/);
 });
+
+test('iOS slide starts from a measured off-screen position and dragged close is continuous',()=>{
+  const js=fs.readFileSync('app/src/numericKeypad.js','utf8');
+  assert.match(js,/panel\.classList\.remove\('is-open'\);\s*\/\/ Ensure WebKit computes/);
+  assert.match(js,/void panel\.offsetHeight;/);
+  assert.match(js,/const dismiss=!cancelled&&shouldDismissKeypadSwipe/);
+  assert.match(js,/if\(dismiss\)\{[\s\S]*?close\(\{restoreFocus:false\}\);[\s\S]*?\}else\{/);
+});

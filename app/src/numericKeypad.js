@@ -164,7 +164,6 @@ export function installNumericKeypad(root,{onValue}){
       shell?.classList.remove('gain-keypad-open');
       shell?.style.removeProperty('--gain-keypad-height');
       panel.classList.remove('is-dragging','is-open');
-      panel.style.removeProperty('--gain-drag-y');
       const token=++animationToken;
       if(prefersReducedMotion())finishExit(token);
       else exitTimer=setTimeout(()=>finishExit(token),420);
@@ -234,6 +233,8 @@ export function installNumericKeypad(root,{onValue}){
     }else{
       // Force the hidden/off-screen state to paint before the sheet slides up.
       panel.classList.remove('is-open');
+      // Ensure WebKit computes the off-screen starting position before animating.
+      void panel.offsetHeight;
       requestAnimationFrame(()=>{
         if(token!==animationToken||!active)return;
         panel.classList.add('is-open');
@@ -276,10 +277,13 @@ export function installNumericKeypad(root,{onValue}){
     pointerGesture=null;
     if(!gesture.dragging)return;
     suppressTapUntil=Date.now()+420;
+    const dismiss=!cancelled&&shouldDismissKeypadSwipe(gesture.distance,performance.now()-gesture.start);
     panel.classList.remove('is-dragging');
-    panel.style.removeProperty('--gain-drag-y');
-    if(!cancelled&&shouldDismissKeypadSwipe(gesture.distance,performance.now()-gesture.start)){
+    if(dismiss){
+      // Keep the dragged starting transform until the downward exit begins.
       close({restoreFocus:false});
+    }else{
+      panel.style.removeProperty('--gain-drag-y');
     }
   }
   panel.addEventListener('pointerup',event=>releaseSwipe(event));
